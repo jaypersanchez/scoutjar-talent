@@ -32,7 +32,7 @@ export const colors = {
       borderWidth: 1,
       borderRadius: 8,
       padding: 12,
-      color: colors.white,
+      color: colors.dark,
       marginBottom: 12,
     },
     title: {

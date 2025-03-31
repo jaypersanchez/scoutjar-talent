@@ -14,6 +14,8 @@ import { commonStyles, colors } from './theme';
 export default function HomeScreen({ navigation }) {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
+  const [talent, setTalent] = useState(null);
 
   const handleSignOut = async () => {
     try {
@@ -25,26 +27,17 @@ export default function HomeScreen({ navigation }) {
       Alert.alert("Error", "Failed to sign out. Please try again.");
     }
   };
-  
 
   const goToProfile = () => {
     navigation.navigate("Profile");
   };
 
-  const fetchMatchingJobs = async () => {
+  const fetchMatchingJobs = async (talent_id) => {
     try {
-      const talentStr = await AsyncStorage.getItem('talent');
-      if (!talentStr) {
-        Alert.alert("Error", "No talent profile found.");
-        return;
-      }
-
-      const talent = JSON.parse(talentStr);
-
       const response = await fetch("http://localhost:5001/match-jobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ talent_id: talent.talent_id }),
+        body: JSON.stringify({ talent_id }),
       });
 
       const result = await response.json();
@@ -52,8 +45,6 @@ export default function HomeScreen({ navigation }) {
     } catch (err) {
       console.error("❌ Failed to load jobs:", err);
       Alert.alert("Error", "Failed to load job matches.");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -97,7 +88,26 @@ export default function HomeScreen({ navigation }) {
   };
 
   useEffect(() => {
-    fetchMatchingJobs();
+    const loadSessionData = async () => {
+      try {
+        const userStr = await AsyncStorage.getItem('user');
+        const talentStr = await AsyncStorage.getItem('talent');
+
+        if (userStr) setUser(JSON.parse(userStr));
+        if (talentStr) {
+          const parsedTalent = JSON.parse(talentStr);
+          setTalent(parsedTalent);
+          await fetchMatchingJobs(parsedTalent.talent_id);
+        }
+      } catch (err) {
+        console.error("❌ Error loading session data:", err);
+        Alert.alert("Error", "Failed to load session.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSessionData();
   }, []);
 
   if (loading) {
@@ -111,7 +121,14 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <ScrollView contentContainerStyle={commonStyles.container}>
-      <Text style={[commonStyles.title, { fontSize: 24 }]}>🏡 Welcome to the Main/Home Screen!</Text>
+      <Text style={[commonStyles.title, { fontSize: 20 }]}>
+        🏡 Welcome {user?.full_name || "ScoutJar Talent"}!
+      </Text>
+      {talent && (
+        <Text style={{ color: colors.gray, marginBottom: 10 }}>
+          Talent ID: {talent.talent_id} | User ID: {talent.user_id}
+        </Text>
+      )}
 
       <TouchableOpacity style={commonStyles.button} onPress={goToProfile}>
         <Text style={commonStyles.buttonText}>Go to Profile</Text>
