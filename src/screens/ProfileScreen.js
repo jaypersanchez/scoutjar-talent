@@ -3,12 +3,13 @@ import {
   View,
   Text,
   TextInput,
-  StyleSheet,
   ScrollView,
   Button,
+  StyleSheet,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
+import { commonStyles } from './theme';
 
 export default function ProfileScreen({ navigation }) {
   const [profile, setProfile] = useState({
@@ -36,8 +37,6 @@ export default function ProfileScreen({ navigation }) {
         }
 
         const talent = JSON.parse(talentStr);
-        console.log('Loaded talent from storage:', talent); // 👈 Debug
-
         if (!talent || typeof talent.talent_id === 'undefined') {
           alert('Missing talent_id in session');
           return;
@@ -72,7 +71,6 @@ export default function ProfileScreen({ navigation }) {
 
   const handleSave = async () => {
     try {
-      console.log(profile);
       if (!profile.talent_id) {
         return alert('❌ Missing talent_id in profile data.');
       }
@@ -89,7 +87,6 @@ export default function ProfileScreen({ navigation }) {
         location: profile.location,
         availability: profile.availability,
       };
-      console.log('Saving profile for talent ID:', profile.talent_id);
 
       const response = await fetch('http://172.22.105.132:5000/talent-profiles/update-talent-profile', {
         method: 'POST',
@@ -112,13 +109,13 @@ export default function ProfileScreen({ navigation }) {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.label}>Bio</Text>
-      <TextInput style={styles.input} multiline value={profile.bio} onChangeText={(text) => handleChange('bio', text)} />
+      <TextInput style={commonStyles.input} multiline value={profile.bio} onChangeText={(text) => handleChange('bio', text)} />
 
       <Text style={styles.label}>Resume</Text>
-      <TextInput style={styles.input} multiline value={profile.resume} onChangeText={(text) => handleChange('resume', text)} />
+      <TextInput style={commonStyles.input} multiline value={profile.resume} onChangeText={(text) => handleChange('resume', text)} />
 
       <Text style={styles.label}>Skills (comma separated)</Text>
-      <TextInput style={styles.input} value={profile.skills} onChangeText={(text) => handleChange('skills', text)} />
+      <TextInput style={commonStyles.input} value={profile.skills} onChangeText={(text) => handleChange('skills', text)} />
 
       <Text style={styles.label}>Experience Level</Text>
       <Picker selectedValue={profile.experience} onValueChange={(val) => handleChange('experience', val)}>
@@ -129,7 +126,7 @@ export default function ProfileScreen({ navigation }) {
       </Picker>
 
       <Text style={styles.label}>Education</Text>
-      <TextInput style={styles.input} value={profile.education} onChangeText={(text) => handleChange('education', text)} />
+      <TextInput style={commonStyles.input} value={profile.education} onChangeText={(text) => handleChange('education', text)} />
 
       <Text style={styles.label}>Work Preferences</Text>
       <Picker selectedValue={profile.work_preferences} onValueChange={(val) => handleChange('work_preferences', val)}>
@@ -150,10 +147,10 @@ export default function ProfileScreen({ navigation }) {
       </Picker>
 
       <Text style={styles.label}>Desired Salary</Text>
-      <TextInput style={styles.input} keyboardType="numeric" value={profile.desired_salary} onChangeText={(text) => handleChange('desired_salary', text)} />
+      <TextInput style={commonStyles.input} keyboardType="numeric" value={profile.desired_salary} onChangeText={(text) => handleChange('desired_salary', text)} />
 
       <Text style={styles.label}>Location</Text>
-      <TextInput style={styles.input} value={profile.location} onChangeText={(text) => handleChange('location', text)} />
+      <TextInput style={commonStyles.input} value={profile.location} onChangeText={(text) => handleChange('location', text)} />
 
       <Text style={styles.label}>Availability</Text>
       <Picker selectedValue={profile.availability} onValueChange={(val) => handleChange('availability', val)}>
@@ -179,11 +176,5 @@ const styles = StyleSheet.create({
   label: {
     fontWeight: 'bold',
     marginTop: 10,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 6,
-    padding: 10,
   },
 });

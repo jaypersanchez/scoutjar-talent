@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, TextInput } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { commonStyles } from './theme';
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
@@ -25,7 +26,6 @@ export default function LoginScreen({ navigation }) {
         throw new Error(data.error || "Login failed");
       }
 
-      // Save to sessionStorage
       await AsyncStorage.setItem('user', JSON.stringify(data.user));
       await AsyncStorage.setItem('talent', JSON.stringify(data.talent));
 
@@ -38,11 +38,11 @@ export default function LoginScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>ScoutJar Talent Login</Text>
+    <View style={[commonStyles.container, { justifyContent: 'center' }]}>
+      <Text style={commonStyles.title}>ScoutJar Talent Login</Text>
 
       <TextInput
-        style={styles.input}
+        style={commonStyles.input}
         placeholder="Email"
         placeholderTextColor="#ccc"
         value={email}
@@ -51,7 +51,7 @@ export default function LoginScreen({ navigation }) {
       />
 
       <TextInput
-        style={styles.input}
+        style={commonStyles.input}
         placeholder="Password"
         placeholderTextColor="#ccc"
         value={password}
@@ -59,43 +59,9 @@ export default function LoginScreen({ navigation }) {
         secureTextEntry
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Sign In</Text>
+      <TouchableOpacity style={commonStyles.button} onPress={handleLogin}>
+        <Text style={commonStyles.buttonText}>Sign In</Text>
       </TouchableOpacity>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#101010',
-    justifyContent: 'center',
-    padding: 24,
-  },
-  title: {
-    fontSize: 22,
-    color: '#fff',
-    marginBottom: 32,
-    textAlign: 'center',
-  },
-  input: {
-    borderColor: '#444',
-    borderWidth: 1,
-    borderRadius: 8,
-    marginBottom: 16,
-    padding: 12,
-    color: '#fff',
-  },
-  button: {
-    backgroundColor: '#1e90ff',
-    padding: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-});
