@@ -45,7 +45,7 @@ export default function MessageScreen({ route }) {
         }
   
         setTalent(talentObj);
-        await fetchConversation(talentObj.user_id, recruiter_id);
+        await fetchConversation(talentObj.talent_id, recruiter_id);
       } catch (err) {
         console.error("❌ Error loading talent or messages:", err);
       }
@@ -66,7 +66,7 @@ export default function MessageScreen({ route }) {
   
     try {
       const payload = {
-        sender_id: talent.user_id,
+        sender_id: talent.talent_id,
         recipient_id: recruiter_id,
         content: msg.text,
       };
@@ -85,7 +85,7 @@ export default function MessageScreen({ route }) {
         text: msg.text,
         createdAt: new Date(result.sent_at),
         user: {
-          _id: talent.user_id,
+          _id: talent.talent_id,
           name: "You"
         }
       };
@@ -102,7 +102,7 @@ export default function MessageScreen({ route }) {
     <GiftedChat
       messages={messages}
       onSend={(messages) => onSend(messages)}
-      user={{ _id: talent?.user_id }}
+      user={{ _id: talent?.talent_id }}
       placeholder="Type your message..."
       showUserAvatar
       alwaysShowSend
