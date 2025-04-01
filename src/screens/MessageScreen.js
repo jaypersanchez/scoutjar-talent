@@ -1,13 +1,23 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
-import { GiftedChat } from 'react-native-gifted-chat';
+import React, { useEffect, useState, useRef } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { commonStyles } from './theme';
+import { commonStyles, colors } from './theme';
 
 export default function MessageScreen({ route, navigation }) {
   const { recruiter_id, job_id, job_title } = route.params;
   const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
   const [talent, setTalent] = useState(null);
+  const flatListRef = useRef(null);
 
   const fetchConversation = async (sender_id, recipient_id) => {
     try {
@@ -17,13 +27,10 @@ export default function MessageScreen({ route, navigation }) {
       const data = await response.json();
 
       const formatted = data.reverse().map((msg) => ({
-        _id: msg.message_id,
+        id: msg.message_id,
         text: msg.content,
-        createdAt: new Date(msg.sent_at),
-        user: {
-          _id: msg.sender_id,
-          name: msg.sender_id === sender_id ? 'You' : 'Recruiter',
-        },
+        sentAt: new Date(msg.sent_at),
+        senderId: msg.sender_id,
       }));
 
       setMessages(formatted);
@@ -39,10 +46,7 @@ export default function MessageScreen({ route, navigation }) {
         const talentObj = JSON.parse(talentStr);
 
         if (!talentObj?.talent_id || !recruiter_id) {
-          console.error('❌ Missing talent_id or recruiter_id', {
-            talentObj,
-            recruiter_id,
-          });
+          console.error('❌ Missing talent_id or recruiter_id');
           return;
         }
 
@@ -56,19 +60,14 @@ export default function MessageScreen({ route, navigation }) {
     load();
   }, [recruiter_id]);
 
-  const onSend = useCallback(async (newMessages = []) => {
-    const msg = newMessages[0];
-
-    if (!talent?.talent_id || !recruiter_id) {
-      console.warn("Missing sender or recipient ID.");
-      return;
-    }
+  const sendMessage = async () => {
+    if (!input.trim() || !talent?.talent_id || !recruiter_id) return;
 
     try {
       const payload = {
         sender_id: talent.talent_id,
         recipient_id: recruiter_id,
-        content: msg.text,
+        content: input.trim(),
       };
 
       const response = await fetch('http://localhost:5000/messages/send', {
@@ -79,36 +78,119 @@ export default function MessageScreen({ route, navigation }) {
 
       const result = await response.json();
 
-      const messageWithMeta = {
-        _id: result.message_id,
-        text: msg.text,
-        createdAt: new Date(result.sent_at),
-        user: {
-          _id: talent.talent_id,
-          name: "You"
-        }
+      const newMessage = {
+        id: result.message_id,
+        text: input.trim(),
+        sentAt: new Date(result.sent_at),
+        senderId: talent.talent_id,
       };
 
-      setMessages((prevMessages) => GiftedChat.append(prevMessages, [messageWithMeta]));
+      setMessages((prev) => [...prev, newMessage]);
+      setInput('');
+
+      // Auto-scroll to bottom
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
     } catch (err) {
       console.error('Failed to send message:', err);
     }
-  }, [talent, recruiter_id]);
+  };
+
+  const renderItem = ({ item }) => {
+    const isMine = item.senderId === talent?.talent_id;
+    return (
+      <View style={[styles.messageBubble, isMine ? styles.myMessage : styles.theirMessage]}>
+        <Text style={styles.messageText}>{item.text}</Text>
+        <Text style={styles.timestamp}>{new Date(item.sentAt).toLocaleTimeString()}</Text>
+      </View>
+    );
+  };
 
   return (
-    <View style={{ flex: 1 }}>
-      <TouchableOpacity style={[commonStyles.button, { margin: 12 }]} onPress={() => navigation.navigate('Home')}>
-        <Text style={commonStyles.buttonText}>🏠 Back to Home</Text>
-      </TouchableOpacity>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <View style={{ flex: 1 }}>
+        <TouchableOpacity
+          style={[commonStyles.button, { margin: 12 }]}
+          onPress={() => navigation.navigate('Home')}
+        >
+          <Text style={commonStyles.buttonText}>🏠 Back to Home</Text>
+        </TouchableOpacity>
 
-      <GiftedChat
-        messages={messages}
-        onSend={(messages) => onSend(messages)}
-        user={{ _id: talent?.talent_id }}
-        placeholder="Type your message..."
-        showUserAvatar
-        alwaysShowSend
-      />
-    </View>
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          keyExtractor={(item) => item.id?.toString()}
+          renderItem={renderItem}
+          contentContainerStyle={styles.messageList}
+        />
+
+        <View style={styles.inputRow}>
+          <TextInput
+            style={styles.inputBox}
+            placeholder="Type a message..."
+            placeholderTextColor="#999"
+            value={input}
+            onChangeText={setInput}
+          />
+          <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+            <Text style={commonStyles.buttonText}>Send</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
+
+const styles = StyleSheet.create({
+  messageList: {
+    padding: 12,
+    paddingBottom: 70,
+  },
+  messageBubble: {
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 10,
+    maxWidth: '80%',
+  },
+  myMessage: {
+    backgroundColor: colors.primary,
+    alignSelf: 'flex-end',
+  },
+  theirMessage: {
+    backgroundColor: '#444',
+    alignSelf: 'flex-start',
+  },
+  messageText: {
+    color: colors.white,
+    fontSize: 15,
+  },
+  timestamp: {
+    fontSize: 10,
+    color: colors.muted,
+    marginTop: 4,
+    textAlign: 'right',
+  },
+  inputRow: {
+    flexDirection: 'row',
+    padding: 8,
+    borderTopWidth: 1,
+    borderColor: '#333',
+    backgroundColor: '#1e1e1e',
+  },
+  inputBox: {
+    flex: 1,
+    color: '#fff',
+    backgroundColor: '#333',
+    padding: 10,
+    borderRadius: 8,
+    marginRight: 8,
+  },
+  sendButton: {
+    backgroundColor: colors.accent,
+    padding: 10,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});

@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Alert,
   ScrollView,
+  Switch,
   StyleSheet,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -13,9 +14,11 @@ import { commonStyles, colors } from './theme';
 
 export default function HomeScreen({ navigation }) {
   const [jobs, setJobs] = useState([]);
+  const [appliedJobs, setAppliedJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [talent, setTalent] = useState(null);
+  const [showApplied, setShowApplied] = useState(false);
 
   const handleSignOut = async () => {
     try {
@@ -30,6 +33,17 @@ export default function HomeScreen({ navigation }) {
 
   const goToProfile = () => {
     navigation.navigate("Profile");
+  };
+
+  const fetchAppliedJobs = async (talent_id) => {
+    try {
+      const res = await fetch(`http://localhost:5000/job-applicants/talent/${talent_id}`);
+      const data = await res.json();
+      const jobIds = data.map(item => item.job_id);
+      setAppliedJobs(jobIds);
+    } catch (err) {
+      console.error("❌ Failed to fetch applied jobs:", err);
+    }
   };
 
   const fetchMatchingJobs = async (talent_id) => {
@@ -50,13 +64,6 @@ export default function HomeScreen({ navigation }) {
 
   const handleApply = async (job) => {
     try {
-      const talentStr = await AsyncStorage.getItem('talent');
-      if (!talentStr) {
-        Alert.alert("Error", "Talent session not found.");
-        return;
-      }
-
-      const talent = JSON.parse(talentStr);
       const payload = {
         talent_id: talent.talent_id,
         job_id: job.job_id
@@ -71,11 +78,16 @@ export default function HomeScreen({ navigation }) {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Unknown error');
+        if (response.status === 409) {
+          Alert.alert("Already Applied", "You've already applied for this job.");
+        } else {
+          throw new Error(result.error || 'Unknown error');
+        }
+        return;
       }
 
       Alert.alert("✅ Applied", `Application submitted for "${job.job_title}"`);
-      setJobs(prev => prev.filter(j => j.job_id !== job.job_id));
+      await fetchAppliedJobs(talent.talent_id);
     } catch (error) {
       console.error("❌ Application failed:", error.message);
       Alert.alert("❌ Failed to apply", error.message);
@@ -88,7 +100,7 @@ export default function HomeScreen({ navigation }) {
   };
 
   useEffect(() => {
-    const loadSessionData = async () => {
+    const loadData = async () => {
       try {
         const userStr = await AsyncStorage.getItem('user');
         const talentStr = await AsyncStorage.getItem('talent');
@@ -98,17 +110,21 @@ export default function HomeScreen({ navigation }) {
           const parsedTalent = JSON.parse(talentStr);
           setTalent(parsedTalent);
           await fetchMatchingJobs(parsedTalent.talent_id);
+          await fetchAppliedJobs(parsedTalent.talent_id);
         }
       } catch (err) {
         console.error("❌ Error loading session data:", err);
-        Alert.alert("Error", "Failed to load session.");
       } finally {
         setLoading(false);
       }
     };
 
-    loadSessionData();
+    loadData();
   }, []);
+
+  const filteredJobs = showApplied
+    ? jobs
+    : jobs.filter(job => !appliedJobs.includes(job.job_id));
 
   if (loading) {
     return (
@@ -130,14 +146,23 @@ export default function HomeScreen({ navigation }) {
         </Text>
       )}
 
+      {/*<View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+        <Text style={{ color: colors.white, marginRight: 8 }}>Show Applied Jobs</Text>
+        <Switch
+          value={showApplied}
+          onValueChange={setShowApplied}
+          thumbColor={showApplied ? colors.primary : colors.gray}
+        />
+      </View>*/}
+
       <TouchableOpacity style={commonStyles.button} onPress={goToProfile}>
         <Text style={commonStyles.buttonText}>Go to Profile</Text>
       </TouchableOpacity>
 
-      {jobs.length === 0 ? (
+      {filteredJobs.length === 0 ? (
         <Text style={{ color: colors.gray, marginTop: 12 }}>No matching jobs found.</Text>
       ) : (
-        jobs.map((item) => (
+        filteredJobs.map((item) => (
           <View key={item.job_id} style={styles.jobItem}>
             <Text style={styles.jobTitle}>{item.job_title}</Text>
             <Text style={styles.jobDesc}>{item.job_description}</Text>
@@ -154,27 +179,14 @@ export default function HomeScreen({ navigation }) {
                 <Text style={commonStyles.buttonText}>Apply</Text>
               </TouchableOpacity>
             </View>
-
-            <TouchableOpacity
-              style={[commonStyles.button, { marginTop: 8 }]}
-              onPress={() =>
-                navigation.navigate('Messages', {
-                  recruiter_id: item.recruiter_id,
-                  job_id: item.job_id,
-                  job_title: item.job_title,
-                })
-              }
-            >
-              <Text style={commonStyles.buttonText}>💬 Message Scout</Text>
-            </TouchableOpacity>
           </View>
         ))
       )}
+      <TouchableOpacity style={commonStyles.button} onPress={() => navigation.navigate("AppliedJobs")}>
+        <Text style={commonStyles.buttonText}>📋 View Past Applications</Text>
+      </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[commonStyles.button, { backgroundColor: colors.danger, marginTop: 16 }]}
-        onPress={handleSignOut}
-      >
+      <TouchableOpacity style={[commonStyles.button, { backgroundColor: "#ff4444" }]} onPress={handleSignOut}>
         <Text style={commonStyles.buttonText}>Sign Out</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -183,9 +195,9 @@ export default function HomeScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   jobItem: {
-    backgroundColor: '#222',
-    borderRadius: 10,
+    backgroundColor: colors.card,
     padding: 16,
+    borderRadius: 8,
     marginBottom: 16,
   },
   jobTitle: {
@@ -194,38 +206,34 @@ const styles = StyleSheet.create({
     color: colors.white,
   },
   jobDesc: {
-    fontSize: 14,
-    color: '#ccc',
-    marginTop: 6,
+    color: colors.gray,
+    marginVertical: 8,
   },
   skills: {
-    fontSize: 13,
-    color: '#bbb',
-    marginTop: 8,
+    color: colors.white,
+    fontStyle: 'italic',
   },
   match: {
-    fontSize: 13,
-    color: colors.muted,
-    marginTop: 6,
-    fontStyle: 'italic',
+    color: colors.primary,
+    fontWeight: 'bold',
+    marginTop: 4,
   },
   actionRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     marginTop: 12,
+    justifyContent: 'space-between',
   },
   rejectBtn: {
-    backgroundColor: colors.danger,
-    padding: 10,
-    borderRadius: 8,
-    flex: 0.48,
-    alignItems: 'center',
+    backgroundColor: colors.red,
+    padding: 8,
+    borderRadius: 4,
+    flex: 1,
+    marginRight: 8,
   },
   applyBtn: {
-    backgroundColor: colors.accent,
-    padding: 10,
-    borderRadius: 8,
-    flex: 0.48,
-    alignItems: 'center',
+    backgroundColor: colors.green,
+    padding: 8,
+    borderRadius: 4,
+    flex: 1,
   },
 });
