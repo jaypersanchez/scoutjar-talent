@@ -136,7 +136,13 @@ export default function HomeScreen({ navigation }) {
   }
 
   return (
-    <ScrollView contentContainerStyle={commonStyles.container}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <ScrollView
+      style={{ backgroundColor: colors.background }}
+      contentContainerStyle={
+        [commonStyles.container, { paddingBottom: 60, minHeight: '100%' }]
+      } 
+    >
       <Text style={[commonStyles.title, { fontSize: 20 }]}>
         🏡 Welcome {user?.full_name || "ScoutJar Talent"}!
       </Text>
@@ -164,11 +170,15 @@ export default function HomeScreen({ navigation }) {
       ) : (
         filteredJobs.map((item) => (
           <View key={item.job_id} style={styles.jobItem}>
-            <Text style={styles.jobTitle}>{item.job_title}</Text>
-            <Text style={styles.jobDesc}>{item.job_description}</Text>
-            {item.required_skills?.length > 0 && (
-              <Text style={styles.skills}>Skills: {item.required_skills.join(', ')}</Text>
+            <Text style={styles.jobTitle}>Job ID: {item.job_id || item.id}</Text>
+            <Text style={styles.jobTitle}>{item.job_title || item.title}</Text>
+            <Text style={styles.jobDesc}>{item.job_description || item.description}</Text>
+            {(item.required_skills || item.skills_required)?.length > 0 && (
+              <Text style={styles.skills}>
+                Skills: {(item.required_skills || item.skills_required).join(', ')}
+              </Text>
             )}
+
             <Text style={styles.match}>Match Score: {item.match_score}%</Text>
 
             <View style={styles.actionRow}>
@@ -190,6 +200,7 @@ export default function HomeScreen({ navigation }) {
         <Text style={commonStyles.buttonText}>Sign Out</Text>
       </TouchableOpacity>
     </ScrollView>
+    </View>
   );
 }
 
