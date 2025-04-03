@@ -20,6 +20,7 @@ export default function AppNavigator() {
         <Stack.Screen name="Messages" component={MessageScreen} />
         <Stack.Screen name="AppliedJobs" component={AppliedJobsScreen} options={{ title: 'My Applications' }} />
         <Stack.Screen name="RecruiterProfile" component={RecruiterProfile} options={{ title: 'Recruiter Info' }} />
+        <Stack.Screen name="MessageScreen" component={MessageScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
