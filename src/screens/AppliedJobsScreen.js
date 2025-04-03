@@ -9,15 +9,23 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { commonStyles, colors } from './theme';
+import { SCOUTJAR_SERVER_BASE_URL, SCOUTJAR_SERVER_BASE_PORT } from '@env';
+import { SCOUTJAR_AI_BASE_URL, SCOUTJAR_AI_BASE_PORT } from '@env';
 
 export default function AppliedJobsScreen({ navigation }) {
+  //const recruiterId = user ? user.recruiter_id : null;
+  const baseUrl = `${SCOUTJAR_SERVER_BASE_URL}:${SCOUTJAR_SERVER_BASE_PORT}`;
+  const AIbaseUrl = `${SCOUTJAR_AI_BASE_URL}:${SCOUTJAR_AI_BASE_PORT}`; 
+  
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchAppliedJobs = async (talent_id) => {
     try {
-      const response = await fetch(`http://localhost:5000/job-applicants/talent/${talent_id}`);
+      console.log(`${baseUrl}/job-applicants/talent/${talent_id}`);
+      const response = await fetch(`${baseUrl}/job-applicants/talent/${talent_id}`);
       const data = await response.json();
+      console.log("📋 Received jobs data:", data);
       setJobs(data || []);
     } catch (error) {
       console.error("❌ Failed to load applied jobs:", error);
@@ -29,6 +37,8 @@ export default function AppliedJobsScreen({ navigation }) {
   useEffect(() => {
     const load = async () => {
       const talentStr = await AsyncStorage.getItem('talent');
+      console.log("📦 talentStr:", talentStr);
+
       if (!talentStr) return;
 
       const parsed = JSON.parse(talentStr);

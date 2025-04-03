@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { commonStyles, colors } from './theme';
+import { SCOUTJAR_SERVER_BASE_URL, SCOUTJAR_SERVER_BASE_PORT } from '@env';
+import { SCOUTJAR_AI_BASE_URL, SCOUTJAR_AI_BASE_PORT } from '@env';
 
 export default function HomeScreen({ navigation }) {
   const [jobs, setJobs] = useState([]);
@@ -19,6 +21,8 @@ export default function HomeScreen({ navigation }) {
   const [user, setUser] = useState(null);
   const [talent, setTalent] = useState(null);
   const [showApplied, setShowApplied] = useState(false);
+  const baseUrl = `${SCOUTJAR_SERVER_BASE_URL}:${SCOUTJAR_SERVER_BASE_PORT}`;
+  const AIbaseUrl = `${SCOUTJAR_AI_BASE_URL}:${SCOUTJAR_AI_BASE_PORT}`; 
 
   const handleSignOut = async () => {
     try {
@@ -37,7 +41,7 @@ export default function HomeScreen({ navigation }) {
 
   const fetchAppliedJobs = async (talent_id) => {
     try {
-      const res = await fetch(`http://localhost:5000/job-applicants/talent/${talent_id}`);
+      const res = await fetch(`${baseUrl}/job-applicants/talent/${talent_id}`);
       const data = await res.json();
       const jobIds = data.map(item => item.job_id);
       setAppliedJobs(jobIds);
@@ -48,7 +52,7 @@ export default function HomeScreen({ navigation }) {
 
   const fetchMatchingJobs = async (talent_id) => {
     try {
-      const response = await fetch("http://localhost:5001/match-jobs", {
+      const response = await fetch(`${AIbaseUrl}/match-jobs`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ talent_id }),
@@ -69,7 +73,7 @@ export default function HomeScreen({ navigation }) {
         job_id: job.job_id
       };
 
-      const response = await fetch('http://localhost:5000/job-applicants/apply', {
+      const response = await fetch(`${baseUrl}/job-applicants/apply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
