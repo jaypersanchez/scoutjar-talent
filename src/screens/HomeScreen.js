@@ -6,8 +6,8 @@ import {
   ActivityIndicator,
   Alert,
   ScrollView,
-  Switch,
   StyleSheet,
+  Image
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { commonStyles, colors } from './theme';
@@ -21,6 +21,9 @@ export default function HomeScreen({ navigation }) {
   const [user, setUser] = useState(null);
   const [talent, setTalent] = useState(null);
   const [showApplied, setShowApplied] = useState(false);
+  const [applicantCounts, setApplicantCounts] = useState({});
+  const [recruiterInfoMap, setRecruiterInfoMap] = useState({});
+
   const baseUrl = `${SCOUTJAR_SERVER_BASE_URL}:${SCOUTJAR_SERVER_BASE_PORT}`;
   const AIbaseUrl = `${SCOUTJAR_AI_BASE_URL}:${SCOUTJAR_AI_BASE_PORT}`; 
 
@@ -37,6 +40,38 @@ export default function HomeScreen({ navigation }) {
 
   const goToProfile = () => {
     navigation.navigate("Profile");
+  };
+
+  const fetchApplicantCounts = async () => {
+    try {
+      const res = await fetch(`${baseUrl}/job-applicants/job-counts`);
+      const data = await res.json();
+      const countMap = {};
+      data.forEach(({ job_id, applicant_count }) => {
+        countMap[job_id] = applicant_count;
+      });
+      setApplicantCounts(countMap);
+    } catch (err) {
+      console.error("❌ Failed to fetch applicant counts:", err);
+    }
+  };
+
+  const fetchRecruiterInfo = async (job_id) => {
+    if (recruiterInfoMap[job_id]) return;
+
+    try {
+      const res = await fetch(`${AIbaseUrl}/recruiter-info/${job_id}`);
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || "Failed to get recruiter info");
+
+      setRecruiterInfoMap(prev => ({
+        ...prev,
+        [job_id]: data
+      }));
+    } catch (err) {
+      console.error(`❌ Failed to fetch recruiter info for job ${job_id}:`, err);
+    }
   };
 
   const fetchAppliedJobs = async (talent_id) => {
@@ -115,6 +150,7 @@ export default function HomeScreen({ navigation }) {
           setTalent(parsedTalent);
           await fetchMatchingJobs(parsedTalent.talent_id);
           await fetchAppliedJobs(parsedTalent.talent_id);
+          await fetchApplicantCounts();
         }
       } catch (err) {
         console.error("❌ Error loading session data:", err);
@@ -130,6 +166,10 @@ export default function HomeScreen({ navigation }) {
     ? jobs
     : jobs.filter(job => !appliedJobs.includes(job.job_id));
 
+  useEffect(() => {
+    filteredJobs.forEach(job => fetchRecruiterInfo(job.job_id));
+  }, [filteredJobs]);
+
   if (loading) {
     return (
       <View style={[commonStyles.container, { justifyContent: 'center', alignItems: 'center' }]}>
@@ -141,69 +181,83 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-    <ScrollView
-      style={{ backgroundColor: colors.background }}
-      contentContainerStyle={
-        [commonStyles.container, { paddingBottom: 60, minHeight: '100%' }]
-      } 
-    >
-      <Text style={[commonStyles.title, { fontSize: 20 }]}>
-        🏡 Welcome {user?.full_name || "ScoutJar Talent"}!
-      </Text>
-      {talent && (
-        <Text style={{ color: colors.gray, marginBottom: 10 }}>
-          Talent ID: {talent.talent_id} | User ID: {talent.user_id}
+      <ScrollView
+        style={{ backgroundColor: colors.background }}
+        contentContainerStyle={[commonStyles.container, { paddingBottom: 60, minHeight: '100%' }]}
+      >
+        <Text style={[commonStyles.title, { fontSize: 20 }]}>
+          🏡 Welcome {user?.full_name || "ScoutJar Talent"}!
         </Text>
-      )}
+        {talent && (
+          <Text style={{ color: colors.gray, marginBottom: 10 }}>
+            Talent ID: {talent.talent_id} | User ID: {talent.user_id}
+          </Text>
+        )}
 
-      {/*<View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-        <Text style={{ color: colors.white, marginRight: 8 }}>Show Applied Jobs</Text>
-        <Switch
-          value={showApplied}
-          onValueChange={setShowApplied}
-          thumbColor={showApplied ? colors.primary : colors.gray}
-        />
-      </View>*/}
+        <TouchableOpacity style={commonStyles.button} onPress={goToProfile}>
+          <Text style={commonStyles.buttonText}>Go to Profile</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity style={commonStyles.button} onPress={goToProfile}>
-        <Text style={commonStyles.buttonText}>Go to Profile</Text>
-      </TouchableOpacity>
+        {filteredJobs.length === 0 ? (
+          <Text style={{ color: colors.gray, marginTop: 12 }}>No matching jobs found.</Text>
+        ) : (
+          filteredJobs.map((item) => (
+            <View key={item.job_id} style={styles.jobItem}>
+              <Text style={styles.jobTitle}>Job ID: {item.job_id || item.id}</Text>
+              <Text style={styles.jobTitle}>{item.job_title || item.title}</Text>
+              <Text style={styles.jobDesc}>{item.job_description || item.description}</Text>
+              {(item.required_skills || item.skills_required)?.length > 0 && (
+                <Text style={styles.skills}>
+                  Skills: {(item.required_skills || item.skills_required).join(', ')}
+                </Text>
+              )}
 
-      {filteredJobs.length === 0 ? (
-        <Text style={{ color: colors.gray, marginTop: 12 }}>No matching jobs found.</Text>
-      ) : (
-        filteredJobs.map((item) => (
-          <View key={item.job_id} style={styles.jobItem}>
-            <Text style={styles.jobTitle}>Job ID: {item.job_id || item.id}</Text>
-            <Text style={styles.jobTitle}>{item.job_title || item.title}</Text>
-            <Text style={styles.jobDesc}>{item.job_description || item.description}</Text>
-            {(item.required_skills || item.skills_required)?.length > 0 && (
-              <Text style={styles.skills}>
-                Skills: {(item.required_skills || item.skills_required).join(', ')}
+              <Text style={styles.match}>Match Score: {item.match_score}%</Text>
+              <Text style={{ color: colors.gray }}>
+                Number of Applicants: {applicantCounts[item.job_id] || 0}
               </Text>
-            )}
 
-            <Text style={styles.match}>Match Score: {item.match_score}%</Text>
+              {recruiterInfoMap[item.job_id] && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+                  {recruiterInfoMap[item.job_id].profile_image && (
+                    <Image
+                      source={{ uri: recruiterInfoMap[item.job_id].profile_image }}
+                      style={{ width: 40, height: 40, borderRadius: 20, marginRight: 10 }}
+                      resizeMode="cover"
+                    />
+                  )}
+                  <View>
+                    <Text style={{ color: colors.white }}>
+                      Recruiter: {recruiterInfoMap[item.job_id].full_name}
+                    </Text>
+                    <Text style={{ color: colors.gray }}>
+                      Company: {recruiterInfoMap[item.job_id].company}
+                    </Text>
+                  </View>
+                </View>
+              )}
 
-            <View style={styles.actionRow}>
-              <TouchableOpacity style={styles.rejectBtn} onPress={() => handleReject(item)}>
-                <Text style={commonStyles.buttonText}>Reject</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.applyBtn} onPress={() => handleApply(item)}>
-                <Text style={commonStyles.buttonText}>Apply</Text>
-              </TouchableOpacity>
+
+              <View style={styles.actionRow}>
+                <TouchableOpacity style={styles.rejectBtn} onPress={() => handleReject(item)}>
+                  <Text style={commonStyles.buttonText}>Reject</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.applyBtn} onPress={() => handleApply(item)}>
+                  <Text style={commonStyles.buttonText}>Apply</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        ))
-      )}
-      <TouchableOpacity style={commonStyles.button} onPress={() => navigation.navigate("AppliedJobs")}>
-        <Text style={commonStyles.buttonText}>📋 View Past Applications</Text>
-      </TouchableOpacity>
+          ))
+        )}
 
-      <TouchableOpacity style={[commonStyles.button, { backgroundColor: "#ff4444" }]} onPress={handleSignOut}>
-        <Text style={commonStyles.buttonText}>Sign Out</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <TouchableOpacity style={commonStyles.button} onPress={() => navigation.navigate("AppliedJobs")}>
+          <Text style={commonStyles.buttonText}>📋 View Past Applications</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={[commonStyles.button, { backgroundColor: "#ff4444" }]} onPress={handleSignOut}>
+          <Text style={commonStyles.buttonText}>Sign Out</Text>
+        </TouchableOpacity>
+      </ScrollView>
     </View>
   );
 }
