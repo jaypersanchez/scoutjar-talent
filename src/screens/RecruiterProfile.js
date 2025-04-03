@@ -3,16 +3,20 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, commonStyles } from './theme';
+import { SCOUTJAR_SERVER_BASE_URL, SCOUTJAR_SERVER_BASE_PORT } from '@env';
+import { SCOUTJAR_AI_BASE_URL, SCOUTJAR_AI_BASE_PORT } from '@env';
 
 const RecruiterProfile = ({ route }) => {
   const { recruiter_id } = route.params;
   const [recruiter, setRecruiter] = useState(null);
   const [loading, setLoading] = useState(true);
+  const baseUrl = `${SCOUTJAR_SERVER_BASE_URL}:${SCOUTJAR_SERVER_BASE_PORT}`;
+  const AIbaseUrl = `${SCOUTJAR_AI_BASE_URL}:${SCOUTJAR_AI_BASE_PORT}`; 
 
   useEffect(() => {
     const fetchRecruiter = async () => {
       try {
-        const response = await fetch('http://localhost:5000/recruiter-profile', {
+        const response = await fetch(`${baseUrl}/recruiter-profile`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ recruiter_id })
