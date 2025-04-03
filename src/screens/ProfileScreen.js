@@ -10,6 +10,8 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import { commonStyles } from './theme';
+import { SCOUTJAR_SERVER_BASE_URL, SCOUTJAR_SERVER_BASE_PORT } from '@env';
+import { SCOUTJAR_AI_BASE_URL, SCOUTJAR_AI_BASE_PORT } from '@env';
 
 export default function ProfileScreen({ navigation }) {
   const [profile, setProfile] = useState({
@@ -26,6 +28,8 @@ export default function ProfileScreen({ navigation }) {
     employment_type: '',
     availability: '',
   });
+  const baseUrl = `${SCOUTJAR_SERVER_BASE_URL}:${SCOUTJAR_SERVER_BASE_PORT}`;
+  const AIbaseUrl = `${SCOUTJAR_AI_BASE_URL}:${SCOUTJAR_AI_BASE_PORT}`; 
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -88,7 +92,7 @@ export default function ProfileScreen({ navigation }) {
         availability: profile.availability,
       };
 
-      const response = await fetch('http://172.22.105.132:5000/talent-profiles/update-talent-profile', {
+      const response = await fetch(`${baseUrl}/talent-profiles/update-talent-profile`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
