@@ -10,12 +10,16 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { commonStyles, colors } from './theme';
-import { SCOUTJAR_SERVER_BASE_URL, SCOUTJAR_SERVER_BASE_PORT } from '@env';
-import { SCOUTJAR_AI_BASE_URL, SCOUTJAR_AI_BASE_PORT } from '@env';
+import {
+  EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL,
+  EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_PORT,
+  EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL,
+  EXPO_PUBLIC_SCOUTJAR_AI_BASE_PORT
+} from '@env';
 
 export default function AppliedJobsScreen({ navigation }) {
-  const baseUrl = `${SCOUTJAR_SERVER_BASE_URL}:${SCOUTJAR_SERVER_BASE_PORT}`;
-  const AIbaseUrl = `${SCOUTJAR_AI_BASE_URL}:${SCOUTJAR_AI_BASE_PORT}`;
+  const baseUrl = `${EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL}` //:${EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_PORT}`;
+  const AIbaseUrl = `${EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL}` //:${EXPO_PUBLIC_SCOUTJAR_AI_BASE_PORT}`;
 
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -67,84 +71,89 @@ export default function AppliedJobsScreen({ navigation }) {
       if (!talentStr) return;
       const parsed = JSON.parse(talentStr);
       await fetchAppliedJobs(parsed.talent_id);
-      await fetchApplicantCounts(); // 👈 added
+      await fetchApplicantCounts();
     };
     load();
   }, []);
 
   if (loading) {
     return (
-      <View style={[commonStyles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+      <View style={[commonStyles.container, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#ffffff' }]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={{ color: colors.white, marginTop: 12 }}>Loading applied jobs...</Text>
+        <Text style={{ color: '#000000', marginTop: 12 }}>Loading applied jobs...</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView contentContainerStyle={commonStyles.container}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-        <Text style={styles.backText}>← Back to Home</Text>
-      </TouchableOpacity>
+    <View style={{ flex: 1, backgroundColor: '#ffffff' }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 100 }}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Text style={styles.backText}>← Back to Home</Text>
+        </TouchableOpacity>
 
-      <Text style={commonStyles.title}>📋 Jobs You Applied For</Text>
-      {jobs.length === 0 ? (
-        <Text style={{ color: colors.gray }}>No job applications found.</Text>
-      ) : (
-        jobs.map((item) => (
-          <View key={item.job_id} style={styles.jobItem}>
-            <Text style={styles.jobTitle}>{item.job_title}</Text>
-            <Text style={styles.jobId}>🆔 Job ID: {item.job_id}</Text>
-            <Text style={styles.jobDesc}>{item.job_description}</Text>
+        <Text style={[commonStyles.title, { fontSize: 20, color: '#000000', marginBottom: 20 }]}>
+          📋 Jobs You Applied For
+        </Text>
 
-            {item.required_skills?.length > 0 && (
-              <Text style={styles.skills}>Skills: {item.required_skills.join(', ')}</Text>
-            )}
+        {jobs.length === 0 ? (
+          <Text style={{ color: '#555555' }}>No job applications found.</Text>
+        ) : (
+          jobs.map((item) => (
+            <View key={item.job_id} style={styles.jobItem}>
+              <Text style={styles.jobTitle}>{item.job_title}</Text>
+              <Text style={styles.jobId}>🆔 Job ID: {item.job_id}</Text>
+              <Text style={styles.jobDesc}>{item.job_description}</Text>
 
-            <Text style={styles.status}>✅ Applied</Text>
+              {item.required_skills?.length > 0 && (
+                <Text style={styles.skills}>
+                  Skills: {item.required_skills.join(', ')}
+                </Text>
+              )}
 
-            {/* 👇 Number of Applicants */}
-            <Text style={{ color: colors.gray }}>
-              Number of Applicants: {applicantCounts[item.job_id] || 0}
-            </Text>
+              <Text style={styles.status}>✅ Applied</Text>
 
-            {/* 👇 Recruiter Info */}
-            {recruiterInfoMap[item.job_id] && (
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
-                {recruiterInfoMap[item.job_id].profile_image && (
-                  <Image
-                    source={{ uri: recruiterInfoMap[item.job_id].profile_image }}
-                    style={{ width: 40, height: 40, borderRadius: 20, marginRight: 10 }}
-                    resizeMode="cover"
-                  />
-                )}
-                <View>
-                  <Text style={{ color: colors.white }}>
-                    Recruiter: {recruiterInfoMap[item.job_id].full_name}
-                  </Text>
-                  <Text style={{ color: colors.gray }}>
-                    Company: {recruiterInfoMap[item.job_id].company}
-                  </Text>
+              <Text style={{ color: '#777', marginTop: 4 }}>
+                Number of Applicants: {applicantCounts[item.job_id] || 0}
+              </Text>
+
+              {recruiterInfoMap[item.job_id] && (
+                <View style={styles.recruiterContainer}>
+                  {recruiterInfoMap[item.job_id].profile_image && (
+                    <Image
+                      source={{ uri: recruiterInfoMap[item.job_id].profile_image }}
+                      style={styles.recruiterImage}
+                      resizeMode="cover"
+                    />
+                  )}
+                  <View style={{ marginLeft: 10 }}>
+                    <Text style={styles.recruiterText}>
+                      Recruiter: {recruiterInfoMap[item.job_id].full_name}
+                    </Text>
+                    <Text style={styles.recruiterCompany}>
+                      Company: {recruiterInfoMap[item.job_id].company}
+                    </Text>
+                  </View>
                 </View>
-              </View>
-            )}
+              )}
 
-            <TouchableOpacity
-              style={styles.messageButton}
-              onPress={() =>
-                navigation.navigate('MessageScreen', {
-                  recruiter_id: item.recruiter_id,
-                  job_id: item.job_id,
-                  job_title: item.job_title,
-                })
-              }
-            >
-              <Text style={styles.messageText}>💬 Message Recruiter</Text>
-            </TouchableOpacity>
-          </View>
-        ))
-      )}
-    </ScrollView>
+              <TouchableOpacity
+                style={styles.messageButton}
+                onPress={() =>
+                  navigation.navigate('MessageScreen', {
+                    recruiter_id: item.recruiter_id,
+                    job_id: item.job_id,
+                    job_title: item.job_title,
+                  })
+                }
+              >
+                <Text style={styles.messageText}>💬 Message Recruiter</Text>
+              </TouchableOpacity>
+            </View>
+          ))
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
@@ -153,53 +162,74 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     paddingVertical: 8,
     paddingHorizontal: 12,
-    marginBottom: 10,
-    backgroundColor: colors.card,
-    borderRadius: 6,
+    backgroundColor: '#2727D9',
+    borderRadius: 8,
+    marginBottom: 20,
   },
   backText: {
-    color: colors.white,
+    color: '#ffffff',
     fontSize: 14,
   },
   jobItem: {
-    backgroundColor: colors.card,
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 16,
+    backgroundColor: '#f5f5f5',
+    padding: 20,
+    borderRadius: 12,
+    marginBottom: 20,
   },
   jobTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: colors.white,
+    color: '#000000',
   },
   jobId: {
     marginTop: 4,
     fontSize: 13,
-    color: colors.muted || '#bbb',
+    color: '#888',
   },
   jobDesc: {
-    color: colors.gray,
-    marginVertical: 8,
+    marginTop: 8,
+    fontSize: 14,
+    color: '#333',
   },
   skills: {
-    color: colors.white,
+    marginTop: 8,
+    fontSize: 13,
     fontStyle: 'italic',
+    color: '#333',
   },
   status: {
-    marginTop: 6,
-    color: '#4CAF50',
+    marginTop: 8,
+    color: '#30a14e',
     fontWeight: 'bold',
   },
+  recruiterContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  recruiterImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  recruiterText: {
+    fontSize: 13,
+    color: '#000000',
+  },
+  recruiterCompany: {
+    fontSize: 13,
+    color: '#555555',
+  },
   messageButton: {
-    marginTop: 10,
+    marginTop: 12,
     backgroundColor: '#2196F3',
     paddingVertical: 8,
     paddingHorizontal: 12,
-    borderRadius: 6,
+    borderRadius: 8,
     alignSelf: 'flex-start',
   },
   messageText: {
-    color: '#fff',
+    color: '#ffffff',
     fontWeight: 'bold',
   },
 });
