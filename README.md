@@ -11,3 +11,6 @@ VITE_SCOUTJAR_SERVER_BASE_URL="http://localhost:"
 VITE_SCOUTJAR_SERVER_BASE_PORT=5000
 VITE_SCOUTJAR_AI_BASE_URL="http://localhost:"
 VITE_SCOUTJAR_AI_BASE_URL=5001
+
+npx expo start --tunnel
+npx expo start --c

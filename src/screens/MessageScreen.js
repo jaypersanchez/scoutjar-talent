@@ -11,8 +11,8 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { commonStyles, colors } from './theme';
-import { SCOUTJAR_SERVER_BASE_URL, SCOUTJAR_SERVER_BASE_PORT } from '@env';
-import { SCOUTJAR_AI_BASE_URL, SCOUTJAR_AI_BASE_PORT } from '@env';
+import { EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL, EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_PORT } from '@env';
+import { EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL, EXPO_PUBLIC_SCOUTJAR_AI_BASE_PORT } from '@env';
 
 export default function MessageScreen({ route, navigation }) {
   const { recruiter_id, job_id, job_title } = route.params;
@@ -20,8 +20,8 @@ export default function MessageScreen({ route, navigation }) {
   const [input, setInput] = useState('');
   const [talent, setTalent] = useState(null);
   const flatListRef = useRef(null);
-  const baseUrl = `${SCOUTJAR_SERVER_BASE_URL}:${SCOUTJAR_SERVER_BASE_PORT}`;
-  const AIbaseUrl = `${SCOUTJAR_AI_BASE_URL}:${SCOUTJAR_AI_BASE_PORT}`; 
+  const baseUrl = `${EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL}` //${SCOUTJAR_SERVER_BASE_PORT}`;
+  const AIbaseUrl = `${EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL}` //${SCOUTJAR_AI_BASE_PORT}`;
 
   const fetchConversation = async (sender_id, recipient_id) => {
     try {
@@ -30,7 +30,7 @@ export default function MessageScreen({ route, navigation }) {
       );
       const data = await response.json();
 
-      const formatted = data.reverse().map((msg) => ({
+      const formatted = data.map((msg) => ({
         id: msg.message_id,
         text: msg.content,
         sentAt: new Date(msg.sent_at),
@@ -64,6 +64,11 @@ export default function MessageScreen({ route, navigation }) {
     load();
   }, [recruiter_id]);
 
+  useEffect(() => {
+    // Auto-scroll when messages update
+    flatListRef.current?.scrollToEnd({ animated: true });
+  }, [messages]);
+
   const sendMessage = async () => {
     if (!input.trim() || !talent?.talent_id || !recruiter_id) return;
 
@@ -81,21 +86,10 @@ export default function MessageScreen({ route, navigation }) {
       });
 
       const result = await response.json();
-
-      const newMessage = {
-        id: result.message_id,
-        text: input.trim(),
-        sentAt: new Date(result.sent_at),
-        senderId: talent.talent_id,
-      };
-
-      setMessages((prev) => [...prev, newMessage]);
       setInput('');
 
-      // Auto-scroll to bottom
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
+      // Re-fetch conversation after sending
+      await fetchConversation(talent.talent_id, recruiter_id);
     } catch (err) {
       console.error('Failed to send message:', err);
     }
