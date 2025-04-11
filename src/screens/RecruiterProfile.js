@@ -3,15 +3,15 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, commonStyles } from './theme';
-import { SCOUTJAR_SERVER_BASE_URL, SCOUTJAR_SERVER_BASE_PORT } from '@env';
-import { SCOUTJAR_AI_BASE_URL, SCOUTJAR_AI_BASE_PORT } from '@env';
+import { EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL, EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_PORT } from '@env';
+import { EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL, EXPO_PUBLIC_SCOUTJAR_AI_BASE_PORT } from '@env';
 
 const RecruiterProfile = ({ route }) => {
   const { recruiter_id } = route.params;
   const [recruiter, setRecruiter] = useState(null);
   const [loading, setLoading] = useState(true);
-  const baseUrl = `${SCOUTJAR_SERVER_BASE_URL}:${SCOUTJAR_SERVER_BASE_PORT}`;
-  const AIbaseUrl = `${SCOUTJAR_AI_BASE_URL}:${SCOUTJAR_AI_BASE_PORT}`; 
+  const baseUrl = `${EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL}` //:${SCOUTJAR_SERVER_BASE_PORT}`;
+  const AIbaseUrl = `${EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL}` //:${SCOUTJAR_AI_BASE_PORT}`; 
 
   useEffect(() => {
     const fetchRecruiter = async () => {

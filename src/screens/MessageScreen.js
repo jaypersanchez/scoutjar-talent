@@ -11,8 +11,8 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { commonStyles, colors } from './theme';
-import { SCOUTJAR_SERVER_BASE_URL, SCOUTJAR_SERVER_BASE_PORT } from '@env';
-import { SCOUTJAR_AI_BASE_URL, SCOUTJAR_AI_BASE_PORT } from '@env';
+import { EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL, EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_PORT } from '@env';
+import { EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL, EXPO_PUBLIC_SCOUTJAR_AI_BASE_PORT } from '@env';
 
 export default function MessageScreen({ route, navigation }) {
   const { recruiter_id, job_id, job_title } = route.params;
@@ -20,8 +20,8 @@ export default function MessageScreen({ route, navigation }) {
   const [input, setInput] = useState('');
   const [talent, setTalent] = useState(null);
   const flatListRef = useRef(null);
-  const baseUrl = `${SCOUTJAR_SERVER_BASE_URL}:${SCOUTJAR_SERVER_BASE_PORT}`;
-  const AIbaseUrl = `${SCOUTJAR_AI_BASE_URL}:${SCOUTJAR_AI_BASE_PORT}`;
+  const baseUrl = `${EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL}` //${SCOUTJAR_SERVER_BASE_PORT}`;
+  const AIbaseUrl = `${EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL}` //${SCOUTJAR_AI_BASE_PORT}`;
 
   const fetchConversation = async (sender_id, recipient_id) => {
     try {
