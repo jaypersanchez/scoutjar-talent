@@ -168,7 +168,7 @@ export default function HomeScreen({ navigation }) {
     <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
       <ScrollView
         style={{ backgroundColor: '#FFFFFF' }}
-        contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
+        contentContainerStyle={{ padding: 20, paddingBottom: 150 }} // More padding for footer
       >
         <Text style={[commonStyles.title, { fontSize: 20, color: '#000000', marginBottom: 20 }]}>
           🏡 Welcome {user?.full_name || "LooKK Talent"}!
@@ -197,7 +197,6 @@ export default function HomeScreen({ navigation }) {
               )}
   
               <Text style={styles.matchScore}>Match Score: {job.match_score}%</Text>
-  
               <Text style={styles.applicantCount}>
                 Number of Applicants: {applicantCounts[job.job_id] || 0}
               </Text>
@@ -224,22 +223,23 @@ export default function HomeScreen({ navigation }) {
             </GestureRecognizer>
           ))
         )}
-  
-        {/* Footer Buttons */}
-        <TouchableOpacity style={commonStyles.button} onPress={goToProfile}>
-          <Text style={commonStyles.buttonText}>🏠 Go to Profile</Text>
-        </TouchableOpacity>
-  
-        <TouchableOpacity style={commonStyles.button} onPress={() => navigation.navigate('AppliedJobs')}>
-          <Text style={commonStyles.buttonText}>📋 View Past Applications</Text>
-        </TouchableOpacity>
-  
-        <TouchableOpacity style={[commonStyles.button, { backgroundColor: '#ff4444' }]} onPress={handleSignOut}>
-          <Text style={commonStyles.buttonText}>🚪 Sign Out</Text>
-        </TouchableOpacity>
       </ScrollView>
+  
+      {/* Fixed Footer */}
+      <View style={styles.footer}>
+        <TouchableOpacity style={styles.footerButton} onPress={goToProfile}>
+          <Text style={styles.footerButtonText}>🏠 Profile</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.footerButton} onPress={() => navigation.navigate('AppliedJobs')}>
+          <Text style={styles.footerButtonText}>📋 Applications</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.footerButton, { backgroundColor: '#ff4444' }]} onPress={handleSignOut}>
+          <Text style={styles.footerButtonText}>🚪 Sign Out</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
+  
   
 }
 
@@ -302,4 +302,31 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#ffffff',
   },
+  footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: '#ffffff',
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#ddd',
+  },
+  
+  footerButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  
+  footerButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  
 });
