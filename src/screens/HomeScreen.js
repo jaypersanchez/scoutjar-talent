@@ -11,12 +11,9 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import GestureRecognizer from 'react-native-swipe-gestures';
-import { commonStyles, colors } from './theme';
 import {
   EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL,
-  EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_PORT,
-  EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL,
-  EXPO_PUBLIC_SCOUTJAR_AI_BASE_PORT
+  EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL
 } from '@env';
 
 export default function HomeScreen({ navigation }) {
@@ -28,8 +25,8 @@ export default function HomeScreen({ navigation }) {
   const [applicantCounts, setApplicantCounts] = useState({});
   const [recruiterInfoMap, setRecruiterInfoMap] = useState({});
 
-  const baseUrl = `${EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL}` //:${EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_PORT}`;
-  const AIbaseUrl = `${EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL}`  //:${EXPO_PUBLIC_SCOUTJAR_AI_BASE_PORT}`;
+  const baseUrl = `${EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL}`;
+  const AIbaseUrl = `${EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL}`;
 
   useEffect(() => {
     const loadData = async () => {
@@ -55,7 +52,6 @@ export default function HomeScreen({ navigation }) {
 
   const fetchMatchingJobs = async (talent_id) => {
     try {
-      console.log(`${AIbaseUrl}/match-jobs`, talent_id)
       const response = await fetch(`${AIbaseUrl}/match-jobs`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -81,7 +77,6 @@ export default function HomeScreen({ navigation }) {
 
   const fetchApplicantCounts = async () => {
     try {
-      console.log("✅ BaseURL used for applicant counts:", baseUrl);
       const res = await fetch(`${baseUrl}/job-applicants/job-counts`);
       const data = await res.json();
       const countMap = {};
@@ -157,27 +152,26 @@ export default function HomeScreen({ navigation }) {
 
   if (loading) {
     return (
-      <View style={[commonStyles.container, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#ffffff' }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={{ color: '#000000', marginTop: 12 }}>Loading Jobs...</Text>
+      <View style={[styles.container]}>
+        <ActivityIndicator size="large" color="#7D4AEA" />
+        <Text style={{ color: '#000', marginTop: 12 }}>Loading Jobs...</Text>
       </View>
     );
   }
 
   return (
     <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
-      <ScrollView
-        style={{ backgroundColor: '#FFFFFF' }}
-        contentContainerStyle={{ padding: 20, paddingBottom: 150 }} // More padding for footer
-      >
-        <Text style={[commonStyles.title, { fontSize: 20, color: '#000000', marginBottom: 20 }]}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 150 }}>
+        <View style={{ alignItems: 'center', marginBottom: 20 }}>
+          <Image source={require('../../assets/lookk.png')} style={{ width: 160, height: 40, resizeMode: 'contain' }} />
+        </View>
+
+        <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 20, color: '#2727D9' }}>
           🏡 Welcome {user?.full_name || "LooKK Talent"}!
         </Text>
-  
+
         {jobs.length === 0 ? (
-          <Text style={{ color: '#555555', marginTop: 20, textAlign: 'center' }}>
-            No matching jobs found.
-          </Text>
+          <Text style={{ color: '#555', textAlign: 'center' }}>No matching jobs found.</Text>
         ) : (
           jobs.map((job) => (
             <GestureRecognizer
@@ -189,34 +183,22 @@ export default function HomeScreen({ navigation }) {
             >
               <Text style={styles.jobTitle}>{job.job_title || job.title}</Text>
               <Text style={styles.jobDesc}>{job.job_description || job.description}</Text>
-  
               {(job.required_skills || job.skills_required)?.length > 0 && (
-                <Text style={styles.skills}>
-                  Skills: {(job.required_skills || job.skills_required).join(', ')}
-                </Text>
+                <Text style={styles.skills}>Skills: {(job.required_skills || job.skills_required).join(', ')}</Text>
               )}
-  
               <Text style={styles.matchScore}>Match Score: {job.match_score}%</Text>
-              <Text style={styles.applicantCount}>
-                Number of Applicants: {applicantCounts[job.job_id] || 0}
-              </Text>
-  
+              <Text style={styles.applicantCount}>Applicants: {applicantCounts[job.job_id] || 0}</Text>
               {recruiterInfoMap[job.job_id] && (
                 <View style={styles.recruiterContainer}>
                   {recruiterInfoMap[job.job_id].profile_image && (
                     <Image
                       source={{ uri: recruiterInfoMap[job.job_id].profile_image }}
                       style={styles.recruiterImage}
-                      resizeMode="cover"
                     />
                   )}
                   <View style={{ marginLeft: 10 }}>
-                    <Text style={styles.recruiterText}>
-                      Recruiter: {recruiterInfoMap[job.job_id].full_name}
-                    </Text>
-                    <Text style={styles.recruiterText}>
-                      Company: {recruiterInfoMap[job.job_id].company}
-                    </Text>
+                    <Text style={styles.recruiterText}>Recruiter: {recruiterInfoMap[job.job_id].full_name}</Text>
+                    <Text style={styles.recruiterText}>Company: {recruiterInfoMap[job.job_id].company}</Text>
                   </View>
                 </View>
               )}
@@ -224,7 +206,7 @@ export default function HomeScreen({ navigation }) {
           ))
         )}
       </ScrollView>
-  
+
       {/* Fixed Footer */}
       <View style={styles.footer}>
         <TouchableOpacity style={styles.footerButton} onPress={goToProfile}>
@@ -239,59 +221,55 @@ export default function HomeScreen({ navigation }) {
       </View>
     </View>
   );
-  
-  
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ffffff'
+  },
   jobCard: {
-    backgroundColor: '#2727D9',
+    backgroundColor: '#f5f5ff',
+    borderLeftWidth: 6,
+    borderLeftColor: '#7D4AEA',
     borderRadius: 12,
     padding: 20,
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
   },
   jobTitle: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#ffffff',
-    marginBottom: 8,
-    textAlign: 'center',
+    color: '#2727D9',
+    marginBottom: 6,
   },
   jobDesc: {
     fontSize: 14,
-    color: '#f3f3f3',
-    marginBottom: 12,
-    textAlign: 'center',
+    color: '#333',
+    marginBottom: 10,
   },
   skills: {
-    fontSize: 12,
+    fontSize: 13,
     fontStyle: 'italic',
-    color: '#ffffff',
-    marginBottom: 8,
-    textAlign: 'center',
+    color: '#555',
+    marginBottom: 6,
   },
   matchScore: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 'bold',
     color: '#30a14e',
-    textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   applicantCount: {
-    fontSize: 13,
-    color: '#f3f3f3',
-    textAlign: 'center',
-    marginBottom: 10,
+    fontSize: 12,
+    color: '#777',
+    marginBottom: 8,
   },
   recruiterContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 10,
-    justifyContent: 'center',
   },
   recruiterImage: {
     width: 40,
@@ -300,7 +278,7 @@ const styles = StyleSheet.create({
   },
   recruiterText: {
     fontSize: 13,
-    color: '#ffffff',
+    color: '#000',
   },
   footer: {
     position: 'absolute',
@@ -312,21 +290,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: '#ddd',
+    borderTopColor: '#eee',
   },
-  
   footerButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: '#7D4AEA',
     paddingVertical: 10,
     paddingHorizontal: 16,
-    borderRadius: 8,
+    borderRadius: 50,
   },
-  
   footerButtonText: {
-    color: '#fff',
+    color: '#ffffff',
     fontWeight: 'bold',
     fontSize: 14,
-    textAlign: 'center',
   },
-  
 });
