@@ -116,13 +116,12 @@ export default function ProfileScreen({ navigation }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#ffffff' }}>
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 100 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 150 }}>
         <Text style={styles.pageTitle}>📝 Edit Your Profile</Text>
-
+  
         {renderField('Bio', 'bio', profile.bio, handleChange, true)}
         {renderField('Resume', 'resume', profile.resume, handleChange, true)}
         {renderField('Skills (comma separated)', 'skills', profile.skills, handleChange)}
-
         <Text style={styles.label}>Experience Level</Text>
         <Picker
           selectedValue={profile.experience}
@@ -134,9 +133,9 @@ export default function ProfileScreen({ navigation }) {
           <Picker.Item label="Intermediate" value="Intermediate" />
           <Picker.Item label="Junior" value="Junior" />
         </Picker>
-
+  
         {renderField('Education', 'education', profile.education, handleChange)}
-
+  
         <Text style={styles.label}>Work Preferences</Text>
         <Picker
           selectedValue={profile.work_preferences}
@@ -148,7 +147,7 @@ export default function ProfileScreen({ navigation }) {
           <Picker.Item label="Hybrid" value="Hybrid" />
           <Picker.Item label="On-site" value="On-site" />
         </Picker>
-
+  
         <Text style={styles.label}>Employment Type</Text>
         <Picker
           selectedValue={profile.employment_type}
@@ -162,10 +161,10 @@ export default function ProfileScreen({ navigation }) {
           <Picker.Item label="Freelancer" value="Freelancer" />
           <Picker.Item label="Internship" value="Internship" />
         </Picker>
-
+  
         {renderField('Desired Salary', 'desired_salary', profile.desired_salary, handleChange, false, 'numeric')}
         {renderField('Location', 'location', profile.location, handleChange)}
-
+  
         <Text style={styles.label}>Availability</Text>
         <Picker
           selectedValue={profile.availability}
@@ -179,17 +178,20 @@ export default function ProfileScreen({ navigation }) {
           <Picker.Item label="3 Months" value="3 Months" />
           <Picker.Item label="Not Available" value="Not Available" />
         </Picker>
-
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.saveButtonText}>💾 Save Profile</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.homeButton} onPress={() => navigation.navigate('Home')}>
-          <Text style={styles.homeButtonText}>🏠 Go to Home</Text>
-        </TouchableOpacity>
       </ScrollView>
+  
+      {/* Fixed Footer */}
+      <View style={styles.footer}>
+        <TouchableOpacity style={styles.footerButton} onPress={handleSave}>
+          <Text style={styles.footerButtonText}>💾 Save</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.footerButton, { backgroundColor: '#2727D9' }]} onPress={() => navigation.navigate('Home')}>
+          <Text style={styles.footerButtonText}>🏠 Home</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
+  
 }
 
 const renderField = (label, field, value, handleChange, multiline = false, keyboardType = 'default') => (
@@ -253,4 +255,31 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
+  footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: '#ffffff',
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#ddd',
+  },
+  
+  footerButton: {
+    backgroundColor: '#30a14e',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  
+  footerButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  
 });

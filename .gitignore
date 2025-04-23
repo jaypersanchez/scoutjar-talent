@@ -3,6 +3,7 @@
 # dependencies
 node_modules/
 .env
+scoutjar-talent/.env.localhost-bridge
 
 # Expo
 .expo/
