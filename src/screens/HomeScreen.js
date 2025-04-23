@@ -171,7 +171,7 @@ export default function HomeScreen({ navigation }) {
         contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
       >
         <Text style={[commonStyles.title, { fontSize: 20, color: '#000000', marginBottom: 20 }]}>
-          🏡 Welcome {user?.full_name || "ScoutJar Talent"}!
+          🏡 Welcome {user?.full_name || "LooKK Talent"}!
         </Text>
   
         {jobs.length === 0 ? (
