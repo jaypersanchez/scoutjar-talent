@@ -207,16 +207,19 @@ export default function HomeScreen({ navigation }) {
         )}
       </ScrollView>
 
-      {/* Fixed Footer */}
+      {/* Fixed Footer with Icons */}
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.footerButton} onPress={goToProfile}>
-          <Text style={styles.footerButtonText}>🏠 Profile</Text>
+        <TouchableOpacity style={styles.footerIconButton} onPress={goToProfile}>
+          <Text style={styles.footerIcon}>🏠</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.footerButton} onPress={() => navigation.navigate('AppliedJobs')}>
-          <Text style={styles.footerButtonText}>📋 Applications</Text>
+        <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('AppliedJobs')}>
+          <Text style={styles.footerIcon}>📋</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.footerButton, { backgroundColor: '#ff4444' }]} onPress={handleSignOut}>
-          <Text style={styles.footerButtonText}>🚪 Sign Out</Text>
+        <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('Settings')}>
+          <Text style={styles.footerIcon}>⚙️</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.footerIconButton, { backgroundColor: '#ff4444' }]} onPress={handleSignOut}>
+          <Text style={styles.footerIcon}>🚪</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -292,15 +295,17 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#eee',
   },
-  footerButton: {
+  footerIconButton: {
     backgroundColor: '#7D4AEA',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 50,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 6,
   },
-  footerButtonText: {
+  footerIcon: {
+    fontSize: 22,
     color: '#ffffff',
-    fontWeight: 'bold',
-    fontSize: 14,
   },
 });

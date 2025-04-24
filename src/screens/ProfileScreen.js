@@ -10,12 +10,9 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
-import { commonStyles, colors } from './theme';
 import {
   EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL,
-  EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_PORT,
-  EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL,
-  EXPO_PUBLIC_SCOUTJAR_AI_BASE_PORT
+  EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL
 } from '@env';
 
 export default function ProfileScreen({ navigation }) {
@@ -34,8 +31,8 @@ export default function ProfileScreen({ navigation }) {
     availability: '',
   });
 
-  const baseUrl = `${EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL}` //:${SCOUTJAR_SERVER_BASE_PORT}`;
-  const AIbaseUrl = `${EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL}` //:${SCOUTJAR_AI_BASE_PORT}`;
+  const baseUrl = `${EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL}`;
+  const AIbaseUrl = `${EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL}`;
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -115,83 +112,83 @@ export default function ProfileScreen({ navigation }) {
   };
 
   return (
-  <View style={{ flex: 1, backgroundColor: '#ffffff' }}>
-    <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 150 }}>
-      <Text style={styles.pageTitle}>📝 Edit Your Profile</Text>
+    <View style={{ flex: 1, backgroundColor: '#ffffff' }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 150 }}>
+        <Text style={styles.pageTitle}>📝 Edit Your Profile</Text>
 
-      {renderField('Bio', 'bio', profile.bio, handleChange, true)}
-      {renderField('Resume', 'resume', profile.resume, handleChange, true)}
-      {renderField('Skills (comma separated)', 'skills', profile.skills, handleChange)}
-      <Text style={styles.label}>Experience Level</Text>
-      <Picker
-        selectedValue={profile.experience}
-        onValueChange={(val) => handleChange('experience', val)}
-        style={styles.picker}
-      >
-        <Picker.Item label="Select..." value="" />
-        <Picker.Item label="Senior" value="Senior" />
-        <Picker.Item label="Intermediate" value="Intermediate" />
-        <Picker.Item label="Junior" value="Junior" />
-      </Picker>
+        {renderField('Bio', 'bio', profile.bio, handleChange, true)}
+        {renderField('Resume', 'resume', profile.resume, handleChange, true)}
+        {renderField('Skills (comma separated)', 'skills', profile.skills, handleChange)}
 
-      {renderField('Education', 'education', profile.education, handleChange)}
+        <Text style={styles.label}>Experience Level</Text>
+        <Picker
+          selectedValue={profile.experience}
+          onValueChange={(val) => handleChange('experience', val)}
+          style={styles.picker}
+        >
+          <Picker.Item label="Select..." value="" />
+          <Picker.Item label="Senior" value="Senior" />
+          <Picker.Item label="Intermediate" value="Intermediate" />
+          <Picker.Item label="Junior" value="Junior" />
+        </Picker>
 
-      <Text style={styles.label}>Work Preferences</Text>
-      <Picker
-        selectedValue={profile.work_preferences}
-        onValueChange={(val) => handleChange('work_preferences', val)}
-        style={styles.picker}
-      >
-        <Picker.Item label="Select..." value="" />
-        <Picker.Item label="Remote" value="Remote" />
-        <Picker.Item label="Hybrid" value="Hybrid" />
-        <Picker.Item label="On-site" value="On-site" />
-      </Picker>
+        {renderField('Education', 'education', profile.education, handleChange)}
 
-      <Text style={styles.label}>Employment Type</Text>
-      <Picker
-        selectedValue={profile.employment_type}
-        onValueChange={(val) => handleChange('employment_type', val)}
-        style={styles.picker}
-      >
-        <Picker.Item label="Select..." value="" />
-        <Picker.Item label="Full-time" value="Full-time" />
-        <Picker.Item label="Part-time" value="Part-time" />
-        <Picker.Item label="Contract" value="Contract" />
-        <Picker.Item label="Freelancer" value="Freelancer" />
-        <Picker.Item label="Internship" value="Internship" />
-      </Picker>
+        <Text style={styles.label}>Work Preferences</Text>
+        <Picker
+          selectedValue={profile.work_preferences}
+          onValueChange={(val) => handleChange('work_preferences', val)}
+          style={styles.picker}
+        >
+          <Picker.Item label="Select..." value="" />
+          <Picker.Item label="Remote" value="Remote" />
+          <Picker.Item label="Hybrid" value="Hybrid" />
+          <Picker.Item label="On-site" value="On-site" />
+        </Picker>
 
-      {renderField('Desired Salary', 'desired_salary', profile.desired_salary, handleChange, false, 'numeric')}
-      {renderField('Location', 'location', profile.location, handleChange)}
+        <Text style={styles.label}>Employment Type</Text>
+        <Picker
+          selectedValue={profile.employment_type}
+          onValueChange={(val) => handleChange('employment_type', val)}
+          style={styles.picker}
+        >
+          <Picker.Item label="Select..." value="" />
+          <Picker.Item label="Full-time" value="Full-time" />
+          <Picker.Item label="Part-time" value="Part-time" />
+          <Picker.Item label="Contract" value="Contract" />
+          <Picker.Item label="Freelancer" value="Freelancer" />
+          <Picker.Item label="Internship" value="Internship" />
+        </Picker>
 
-      <Text style={styles.label}>Availability</Text>
-      <Picker
-        selectedValue={profile.availability}
-        onValueChange={(val) => handleChange('availability', val)}
-        style={styles.picker}
-      >
-        <Picker.Item label="Select..." value="" />
-        <Picker.Item label="Immediate" value="Immediate" />
-        <Picker.Item label="Two Weeks Notice" value="Two Weeks Notice" />
-        <Picker.Item label="1 Month" value="1 Month" />
-        <Picker.Item label="3 Months" value="3 Months" />
-        <Picker.Item label="Not Available" value="Not Available" />
-      </Picker>
-    </ScrollView>
+        {renderField('Desired Salary', 'desired_salary', profile.desired_salary, handleChange, false, 'numeric')}
+        {renderField('Location', 'location', profile.location, handleChange)}
 
-    {/* Fixed Footer */}
-    <View style={styles.footer}>
-      <TouchableOpacity style={styles.footerButton} onPress={handleSave}>
-        <Text style={styles.footerButtonText}>💾 Save</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={[styles.footerButton, { backgroundColor: '#2727D9' }]} onPress={() => navigation.navigate('Home')}>
-        <Text style={styles.footerButtonText}>🏠 Home</Text>
-      </TouchableOpacity>
+        <Text style={styles.label}>Availability</Text>
+        <Picker
+          selectedValue={profile.availability}
+          onValueChange={(val) => handleChange('availability', val)}
+          style={styles.picker}
+        >
+          <Picker.Item label="Select..." value="" />
+          <Picker.Item label="Immediate" value="Immediate" />
+          <Picker.Item label="Two Weeks Notice" value="Two Weeks Notice" />
+          <Picker.Item label="1 Month" value="1 Month" />
+          <Picker.Item label="3 Months" value="3 Months" />
+          <Picker.Item label="Not Available" value="Not Available" />
+        </Picker>
+      </ScrollView>
+
+      {/* Fixed Footer */}
+      <View style={styles.footer}>
+        <TouchableOpacity style={styles.footerIconButton} onPress={handleSave}>
+          <Text style={styles.footerIcon}>💾</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.footerIconButton, { backgroundColor: '#2727D9' }]} onPress={() => navigation.navigate('Home')}>
+          <Text style={styles.footerIcon}>🏠</Text>
+        </TouchableOpacity>
+      </View>
     </View>
-  </View>
-);
-
+  );
 }
 
 const renderField = (label, field, value, handleChange, multiline = false, keyboardType = 'default') => (
@@ -233,28 +230,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
     borderRadius: 8,
   },
-  saveButton: {
-    backgroundColor: '#30a14e',
-    padding: 14,
-    borderRadius: 10,
-    marginTop: 30,
-  },
-  saveButtonText: {
-    color: '#ffffff',
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  homeButton: {
-    backgroundColor: '#2727D9',
-    padding: 14,
-    borderRadius: 10,
-    marginTop: 14,
-  },
-  homeButtonText: {
-    color: '#ffffff',
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
   footer: {
     position: 'absolute',
     bottom: 0,
@@ -267,19 +242,17 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#ddd',
   },
-  
-  footerButton: {
+  footerIconButton: {
     backgroundColor: '#30a14e',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 6,
   },
-  
-  footerButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 14,
-    textAlign: 'center',
+  footerIcon: {
+    fontSize: 22,
+    color: '#ffffff',
   },
-  
 });
