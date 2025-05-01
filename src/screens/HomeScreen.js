@@ -210,10 +210,10 @@ export default function HomeScreen({ navigation }) {
       {/* Fixed Footer with Icons */}
       <View style={styles.footer}>
         <TouchableOpacity style={styles.footerIconButton} onPress={goToProfile}>
-          <Text style={styles.footerIcon}>🏠</Text>
+          <Text style={styles.footerIcon}>📋</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('AppliedJobs')}>
-          <Text style={styles.footerIcon}>📋</Text>
+          <Text style={styles.footerIcon}>🗂️</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('Settings')}>
           <Text style={styles.footerIcon}>⚙️</Text>

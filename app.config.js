@@ -2,6 +2,29 @@ export default {
   expo: {
     name: "ScoutJar Talent",
     slug: "scoutjar-talent",
+    version: "1.0.0",
+    orientation: "portrait",
+    icon: "./assets/icon.png",
+    userInterfaceStyle: "light",
+    splash: {
+      image: "./assets/splash-icon.png",
+      resizeMode: "contain",
+      backgroundColor: "#ffffff"
+    },
+    ios: {
+      bundleIdentifier: "com.lookk.talent",   // 👈 MUST add this
+      supportsTablet: true
+    },
+    android: {
+      package: "com.lookk.talent",   // ✅ already correct
+      adaptiveIcon: {
+        foregroundImage: "./assets/adaptive-icon.png",
+        backgroundColor: "#ffffff"
+      }
+    },
+    web: {
+      favicon: "./assets/favicon.png"
+    },
     extra: {
       FIREBASE_API_KEY: process.env.FIREBASE_API_KEY,
       FIREBASE_AUTH_DOMAIN: process.env.FIREBASE_AUTH_DOMAIN,
@@ -12,9 +35,6 @@ export default {
       eas: {
         projectId: "59825ed7-033d-45f8-a06a-eb2aca8f5200"
       }
-    },
-    android: {
-      package: "com.lookk.talent" // 👈 You can change this to something unique if needed
     }
   }
 };
