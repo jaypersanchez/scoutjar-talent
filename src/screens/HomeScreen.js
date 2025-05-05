@@ -50,6 +50,26 @@ export default function HomeScreen({ navigation }) {
     loadData();
   }, []);
 
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', async () => {
+      try {
+        const talentStr = await AsyncStorage.getItem('talent');
+        if (talentStr) {
+          const parsedTalent = JSON.parse(talentStr);
+          setTalent(parsedTalent);
+          await fetchMatchingJobs(parsedTalent.talent_id);
+          await fetchAppliedJobs(parsedTalent.talent_id);
+          await fetchApplicantCounts();
+        }
+      } catch (err) {
+        console.error("❌ Error refreshing HomeScreen data:", err);
+      }
+    });
+  
+    return unsubscribe;
+  }, [navigation]);
+  
+
   const fetchMatchingJobs = async (talent_id) => {
     try {
       const response = await fetch(`${AIbaseUrl}/match-jobs`, {
