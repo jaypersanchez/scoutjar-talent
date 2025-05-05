@@ -7,7 +7,9 @@ import {
   Alert,
   ScrollView,
   StyleSheet,
-  Image
+  Image,
+  Animated,
+  Easing
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import GestureRecognizer from 'react-native-swipe-gestures';
@@ -183,50 +185,76 @@ export default function HomeScreen({ navigation }) {
     <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 150 }}>
         <View style={{ alignItems: 'center', marginBottom: 20 }}>
-          <Image source={require('../../assets/lookk.png')} style={{ width: 160, height: 40, resizeMode: 'contain' }} />
+          <Image
+            source={require('../../assets/lookk.png')}
+            style={{ width: 160, height: 40, resizeMode: 'contain' }}
+          />
         </View>
-
+  
         <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 20, color: '#2727D9' }}>
           🏡 Welcome {user?.full_name || "LooKK Talent"}!
         </Text>
-
+  
         {jobs.length === 0 ? (
           <Text style={{ color: '#555', textAlign: 'center' }}>No matching jobs found.</Text>
         ) : (
-          jobs.map((job) => (
-            <GestureRecognizer
-              key={job.job_id}
-              onSwipeLeft={() => handleReject(job)}
-              onSwipeRight={() => handleApply(job)}
-              config={{ velocityThreshold: 0.3, directionalOffsetThreshold: 80 }}
-              style={styles.jobCard}
-            >
-              <Text style={styles.jobTitle}>{job.job_title || job.title}</Text>
-              <Text style={styles.jobDesc}>{job.job_description || job.description}</Text>
-              {(job.required_skills || job.skills_required)?.length > 0 && (
-                <Text style={styles.skills}>Skills: {(job.required_skills || job.skills_required).join(', ')}</Text>
-              )}
-              <Text style={styles.matchScore}>Match Score: {job.match_score}%</Text>
-              <Text style={styles.applicantCount}>Applicants: {applicantCounts[job.job_id] || 0}</Text>
-              {recruiterInfoMap[job.job_id] && (
-                <View style={styles.recruiterContainer}>
-                  {recruiterInfoMap[job.job_id].profile_image && (
-                    <Image
-                      source={{ uri: recruiterInfoMap[job.job_id].profile_image }}
-                      style={styles.recruiterImage}
-                    />
+          jobs.map((job) => {
+            const translateX = new Animated.Value(0);
+  
+            const animateSwipe = (direction, onComplete) => {
+              const toValue = direction === 'left' ? -500 : 500;
+              Animated.timing(translateX, {
+                toValue,
+                duration: 250,
+                easing: Easing.out(Easing.ease),
+                useNativeDriver: true,
+              }).start(() => onComplete(job));
+            };
+  
+            return (
+              <GestureRecognizer
+                key={job.job_id}
+                onSwipeLeft={() => animateSwipe('left', handleReject)}
+                onSwipeRight={() => animateSwipe('right', handleApply)}
+                config={{ velocityThreshold: 0.3, directionalOffsetThreshold: 80 }}
+              >
+                <Animated.View style={[styles.jobCard, { transform: [{ translateX }] }]}>
+                  <Text style={styles.jobTitle}>{job.job_title || job.title}</Text>
+                  <Text style={styles.jobDesc}>{job.job_description || job.description}</Text>
+                  {(job.required_skills || job.skills_required)?.length > 0 && (
+                    <Text style={styles.skills}>
+                      Skills: {(job.required_skills || job.skills_required).join(', ')}
+                    </Text>
                   )}
-                  <View style={{ marginLeft: 10 }}>
-                    <Text style={styles.recruiterText}>Recruiter: {recruiterInfoMap[job.job_id].full_name}</Text>
-                    <Text style={styles.recruiterText}>Company: {recruiterInfoMap[job.job_id].company}</Text>
-                  </View>
-                </View>
-              )}
-            </GestureRecognizer>
-          ))
+                  <Text style={styles.matchScore}>Match Score: {Math.round(job.match_score)}%</Text>
+                  <Text style={styles.applicantCount}>
+                    Applicants: {applicantCounts[job.job_id] || 0}
+                  </Text>
+                  {recruiterInfoMap[job.job_id] && (
+                    <View style={styles.recruiterContainer}>
+                      {recruiterInfoMap[job.job_id].profile_image && (
+                        <Image
+                          source={{ uri: recruiterInfoMap[job.job_id].profile_image }}
+                          style={styles.recruiterImage}
+                        />
+                      )}
+                      <View style={{ marginLeft: 10 }}>
+                        <Text style={styles.recruiterText}>
+                          Recruiter: {recruiterInfoMap[job.job_id].full_name}
+                        </Text>
+                        <Text style={styles.recruiterText}>
+                          Company: {recruiterInfoMap[job.job_id].company}
+                        </Text>
+                      </View>
+                    </View>
+                  )}
+                </Animated.View>
+              </GestureRecognizer>
+            );
+          })
         )}
       </ScrollView>
-
+  
       {/* Fixed Footer with Icons */}
       <View style={styles.footer}>
         <TouchableOpacity style={styles.footerIconButton} onPress={goToProfile}>
@@ -244,6 +272,7 @@ export default function HomeScreen({ navigation }) {
       </View>
     </View>
   );
+  
 }
 
 const styles = StyleSheet.create({
