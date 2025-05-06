@@ -12,8 +12,11 @@ export default {
       backgroundColor: "#ffffff"
     },
     ios: {
-      bundleIdentifier: "com.lookk.talent",   // 👈 MUST add this
-      supportsTablet: true
+      bundleIdentifier: "com.lookk.ai",   // 👈 MUST add this
+      supportsTablet: true,
+      infoPlist: {
+        ITSAppUsesNonExemptEncryption: false
+      }
     },
     android: {
       package: "com.lookk.talent",   // ✅ already correct
