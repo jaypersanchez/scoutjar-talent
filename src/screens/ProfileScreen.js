@@ -10,13 +10,11 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
-import { commonStyles, colors } from './theme';
 import {
   EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL,
-  EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_PORT,
-  EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL,
-  EXPO_PUBLIC_SCOUTJAR_AI_BASE_PORT
+  EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL
 } from '@env';
+import * as DocumentPicker from 'expo-document-picker';
 
 export default function ProfileScreen({ navigation }) {
   const [profile, setProfile] = useState({
@@ -34,8 +32,45 @@ export default function ProfileScreen({ navigation }) {
     availability: '',
   });
 
-  const baseUrl = `${EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL}` //:${SCOUTJAR_SERVER_BASE_PORT}`;
-  const AIbaseUrl = `${EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL}` //:${SCOUTJAR_AI_BASE_PORT}`;
+  const baseUrl = `${EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL}`;
+  const AIbaseUrl = `${EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL}`;
+
+  const handleUploadResume = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'],
+      });
+  
+      if (result.canceled) return;
+  
+      const file = result.assets[0];
+      const formData = new FormData();
+  
+      formData.append('talent_id', profile.talent_id);
+      formData.append('file', {
+        uri: file.uri,
+        name: file.name,
+        type: file.mimeType || 'application/pdf',
+      });
+  
+      const response = await fetch(`${AIbaseUrl}/upload-resume`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+  
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Upload failed');
+  
+      Alert.alert('✅ Success', 'Resume uploaded and saved!');
+    } catch (err) {
+      console.error('❌ Resume upload error:', err);
+      Alert.alert('Upload Error', err.message || 'Something went wrong.');
+    }
+  };
+  
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -116,11 +151,18 @@ export default function ProfileScreen({ navigation }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#ffffff' }}>
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 100 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 150 }}>
         <Text style={styles.pageTitle}>📝 Edit Your Profile</Text>
 
         {renderField('Bio', 'bio', profile.bio, handleChange, true)}
         {renderField('Resume', 'resume', profile.resume, handleChange, true)}
+        <TouchableOpacity
+  style={[styles.footerIconButton, { backgroundColor: '#5555aa', marginTop: 10 }]}
+  onPress={handleUploadResume}
+>
+  <Text style={styles.footerIcon}>📄</Text>
+</TouchableOpacity>
+
         {renderField('Skills (comma separated)', 'skills', profile.skills, handleChange)}
 
         <Text style={styles.label}>Experience Level</Text>
@@ -179,15 +221,17 @@ export default function ProfileScreen({ navigation }) {
           <Picker.Item label="3 Months" value="3 Months" />
           <Picker.Item label="Not Available" value="Not Available" />
         </Picker>
-
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.saveButtonText}>💾 Save Profile</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.homeButton} onPress={() => navigation.navigate('Home')}>
-          <Text style={styles.homeButtonText}>🏠 Go to Home</Text>
-        </TouchableOpacity>
       </ScrollView>
+
+      {/* Fixed Footer */}
+      <View style={styles.footer}>
+        <TouchableOpacity style={styles.footerIconButton} onPress={handleSave}>
+          <Text style={styles.footerIcon}>💾</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.footerIconButton, { backgroundColor: '#2727D9' }]} onPress={() => navigation.navigate('Home')}>
+          <Text style={styles.footerIcon}>🏠</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -231,26 +275,29 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
     borderRadius: 8,
   },
-  saveButton: {
+  footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: '#ffffff',
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#ddd',
+  },
+  footerIconButton: {
     backgroundColor: '#30a14e',
-    padding: 14,
-    borderRadius: 10,
-    marginTop: 30,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 6,
   },
-  saveButtonText: {
+  footerIcon: {
+    fontSize: 22,
     color: '#ffffff',
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  homeButton: {
-    backgroundColor: '#2727D9',
-    padding: 14,
-    borderRadius: 10,
-    marginTop: 14,
-  },
-  homeButtonText: {
-    color: '#ffffff',
-    fontWeight: 'bold',
-    textAlign: 'center',
   },
 });

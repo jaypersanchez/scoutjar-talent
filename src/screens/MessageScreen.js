@@ -48,6 +48,7 @@ export default function MessageScreen({ route, navigation }) {
       try {
         const talentStr = await AsyncStorage.getItem('talent');
         const talentObj = JSON.parse(talentStr);
+        console.log("📦 Talent from AsyncStorage:", talentObj);
 
         if (!talentObj?.talent_id || !recruiter_id) {
           console.error('❌ Missing talent_id or recruiter_id');
@@ -55,7 +56,7 @@ export default function MessageScreen({ route, navigation }) {
         }
 
         setTalent(talentObj);
-        await fetchConversation(talentObj.talent_id, recruiter_id);
+        await fetchConversation(talentObj.user_id, recruiter_id);
       } catch (err) {
         console.error("❌ Error loading talent or messages:", err);
       }
@@ -74,7 +75,7 @@ export default function MessageScreen({ route, navigation }) {
 
     try {
       const payload = {
-        sender_id: talent.talent_id,
+        sender_id: talent.user_id,
         recipient_id: recruiter_id,
         content: input.trim(),
       };
