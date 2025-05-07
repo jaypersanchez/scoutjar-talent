@@ -29,6 +29,8 @@ export default function HomeScreen({ navigation }) {
 
   const baseUrl = `${EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL}`;
   const AIbaseUrl = `${EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL}`;
+  const [mode, setMode] = useState('active'); // default is "active"
+
 
   useEffect(() => {
     const loadData = async () => {
@@ -71,7 +73,18 @@ export default function HomeScreen({ navigation }) {
     return unsubscribe;
   }, [navigation]);
   
+  useEffect(() => {
+    const loadProfileMode = async () => {
+      const mode = await AsyncStorage.getItem('profile_mode');
+      if (savedMode) {
+        setMode(savedMode);
+        console.log("🛠 Profile Mode:", mode); // You can display this or use it to filter job behavior
+      }
+    };
+    loadProfileMode();
+  }, []);
 
+  
   const fetchMatchingJobs = async (talent_id) => {
     try {
       const response = await fetch(`${AIbaseUrl}/match-jobs`, {
@@ -269,6 +282,9 @@ export default function HomeScreen({ navigation }) {
         <TouchableOpacity style={[styles.footerIconButton]} onPress={handleSignOut}>
           <Text style={styles.footerIcon}>🚪</Text>
         </TouchableOpacity>
+        <Text style={{ textAlign: 'center', color: '#777', marginTop: 4 }}>
+  {mode === 'active' ? '🚀 Active' : '😌 Passive'}
+</Text>
       </View>
     </View>
   );
