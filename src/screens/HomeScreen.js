@@ -266,7 +266,7 @@ export default function HomeScreen({ navigation }) {
         <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('Settings')}>
           <Text style={styles.footerIcon}>⚙️</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.footerIconButton, { backgroundColor: '#ff4444' }]} onPress={handleSignOut}>
+        <TouchableOpacity style={[styles.footerIconButton]} onPress={handleSignOut}>
           <Text style={styles.footerIcon}>🚪</Text>
         </TouchableOpacity>
       </View>
@@ -345,14 +345,16 @@ const styles = StyleSheet.create({
     borderTopColor: '#eee',
   },
   footerIconButton: {
-    backgroundColor: '#7D4AEA',
+    backgroundColor: '#ffffff', // ← WHITE
+    borderWidth: 1,
+    borderColor: '#ccc',        // Optional subtle border
     width: 50,
     height: 50,
     borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
     marginHorizontal: 6,
-  },
+  },  
   footerIcon: {
     fontSize: 22,
     color: '#ffffff',

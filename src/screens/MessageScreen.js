@@ -43,7 +43,7 @@ export default function MessageScreen({ route, navigation }) {
     }
   };
 
-  useEffect(() => {
+  /*useEffect(() => {
     const load = async () => {
       try {
         const talentStr = await AsyncStorage.getItem('talent');
@@ -63,7 +63,39 @@ export default function MessageScreen({ route, navigation }) {
     };
 
     load();
+  }, [recruiter_id]);*/
+
+  useEffect(() => {
+    let intervalId;
+    let isMounted = true;
+  
+    const startPolling = async () => {
+      try {
+        const talentStr = await AsyncStorage.getItem('talent');
+        const talentObj = JSON.parse(talentStr);
+        if (!talentObj?.talent_id || !recruiter_id) return;
+  
+        setTalent(talentObj);
+        await fetchConversation(talentObj.user_id, recruiter_id);
+  
+        intervalId = setInterval(() => {
+          if (isMounted) {
+            fetchConversation(talentObj.user_id, recruiter_id);
+          }
+        }, 5000); // fetch every 5 seconds
+      } catch (err) {
+        console.error("❌ Error initializing polling:", err);
+      }
+    };
+  
+    startPolling();
+  
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
   }, [recruiter_id]);
+  
 
   useEffect(() => {
     // Auto-scroll when messages update
