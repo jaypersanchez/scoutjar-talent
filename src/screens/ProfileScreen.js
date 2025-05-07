@@ -233,7 +233,7 @@ export default function ProfileScreen({ navigation }) {
         <TouchableOpacity style={styles.footerIconButton} onPress={handleSave}>
           <Text style={styles.footerIcon}>💾</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.footerIconButton, { backgroundColor: '#2727D9' }]} onPress={() => navigation.navigate('Home')}>
+        <TouchableOpacity style={[styles.footerIconButton]} onPress={() => navigation.navigate('Home')}>
           <Text style={styles.footerIcon}>🏠</Text>
         </TouchableOpacity>
       </View>
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#ddd',
   },
   footerIconButton: {
-    backgroundColor: '#30a14e',
+    backgroundColor: '#ffffff',
     width: 50,
     height: 50,
     borderRadius: 25,
