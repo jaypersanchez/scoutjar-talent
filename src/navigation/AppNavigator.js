@@ -15,7 +15,7 @@ export default function AppNavigator() {
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Login">
         <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'ScoutJar Talent' }} />
+        <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'LooKK' }} />
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="Messages" component={MessageScreen} />
         <Stack.Screen name="AppliedJobs" component={AppliedJobsScreen} options={{ title: 'My Applications' }} />
