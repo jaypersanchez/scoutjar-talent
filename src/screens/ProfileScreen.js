@@ -6,13 +6,13 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  Alert
+  Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import {
   EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL,
-  EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL
+  EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL,
 } from '@env';
 import * as DocumentPicker from 'expo-document-picker';
 
@@ -40,19 +40,19 @@ export default function ProfileScreen({ navigation }) {
       const result = await DocumentPicker.getDocumentAsync({
         type: ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'],
       });
-  
+
       if (result.canceled) return;
-  
+
       const file = result.assets[0];
       const formData = new FormData();
-  
+
       formData.append('talent_id', profile.talent_id);
       formData.append('file', {
         uri: file.uri,
         name: file.name,
         type: file.mimeType || 'application/pdf',
       });
-  
+
       const response = await fetch(`${AIbaseUrl}/upload-resume`, {
         method: 'POST',
         body: formData,
@@ -60,17 +60,16 @@ export default function ProfileScreen({ navigation }) {
           'Content-Type': 'multipart/form-data',
         },
       });
-  
+
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Upload failed');
-  
+
       Alert.alert('✅ Success', 'Resume uploaded and saved!');
     } catch (err) {
       console.error('❌ Resume upload error:', err);
       Alert.alert('Upload Error', err.message || 'Something went wrong.');
     }
   };
-  
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -126,6 +125,7 @@ export default function ProfileScreen({ navigation }) {
         experience: profile.experience,
         education: profile.education,
         work_preferences: profile.work_preferences,
+        employment_type: profile.employment_type, // ✅ FIXED
         desired_salary: parseFloat(profile.desired_salary || 0),
         location: profile.location,
         availability: profile.availability,
@@ -155,13 +155,19 @@ export default function ProfileScreen({ navigation }) {
         <Text style={styles.pageTitle}>📝 Edit Your Profile</Text>
 
         {renderField('Bio', 'bio', profile.bio, handleChange, true)}
-        {renderField('Resume', 'resume', profile.resume, handleChange, true)}
-        <TouchableOpacity
-  style={[styles.footerIconButton, { backgroundColor: '#5555aa', marginTop: 10 }]}
-  onPress={handleUploadResume}
->
-  <Text style={styles.footerIcon}>📄</Text>
-</TouchableOpacity>
+
+        {/* RESUME FIELD HIDDEN */}
+
+        {/* Upload Resume with Label */}
+        <View style={{ alignItems: 'center', marginTop: 10 }}>
+          <Text style={{ color: '#000', marginBottom: 6 }}>Upload Resume</Text>
+          <TouchableOpacity
+            style={[styles.footerIconButton, { backgroundColor: '#5555aa' }]}
+            onPress={handleUploadResume}
+          >
+            <Text style={styles.footerIcon}>📄</Text>
+          </TouchableOpacity>
+        </View>
 
         {renderField('Skills (comma separated)', 'skills', profile.skills, handleChange)}
 
@@ -223,7 +229,6 @@ export default function ProfileScreen({ navigation }) {
         </Picker>
       </ScrollView>
 
-      {/* Fixed Footer */}
       <View style={styles.footer}>
         <TouchableOpacity style={styles.footerIconButton} onPress={handleSave}>
           <Text style={styles.footerIcon}>💾</Text>
