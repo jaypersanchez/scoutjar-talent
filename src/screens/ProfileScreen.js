@@ -71,7 +71,7 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
-  useEffect(() => {
+  /*useEffect(() => {
     const loadProfile = async () => {
       try {
         const talentStr = await AsyncStorage.getItem('talent');
@@ -104,7 +104,46 @@ export default function ProfileScreen({ navigation }) {
       }
     };
     loadProfile();
+  }, []);*/
+  
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const talentStr = await AsyncStorage.getItem('talent');
+        console.log('📦 Raw talent string from AsyncStorage:', talentStr);
+
+        if (!talentStr) {
+          Alert.alert('Error', 'No talent data found in session');
+          return;
+        }
+        const talent = JSON.parse(talentStr);
+        console.log('👤 Parsed talent object:', talent);
+        
+        setProfile({
+          talent_id: talent.talent_id,
+          user_id: talent.user_id,
+          bio: talent.bio || '',
+          resume: '', // hide it — don't show raw content
+          skills: Array.isArray(talent.skills) ? talent.skills.join(', ') : '',
+          experience: talent.experience || '',
+          education: talent.education || '',
+          desired_salary: talent.desired_salary?.toString() || '',
+          location: talent.location || '',
+          work_preferences: talent.work_preferences || '',
+          employment_type: talent.employment_type || '',
+          availability: talent.availability || '',
+        });
+      } catch (err) {
+        console.error('❌ Failed to load profile from session:', err);
+        Alert.alert('Error', 'Failed to load profile data.');
+      }
+    };
+  
+    loadProfile();
   }, []);
+  
+  
+  
 
   const handleChange = (key, value) => {
     setProfile((prev) => ({ ...prev, [key]: value }));
