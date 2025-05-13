@@ -73,17 +73,17 @@ export default function HomeScreen({ navigation }) {
     return unsubscribe;
   }, [navigation]);
   
-  useEffect(() => {
-    const loadProfileMode = async () => {
-      const mode = await AsyncStorage.getItem('profile_mode');
-      if (savedMode) {
-        setMode(savedMode);
-        console.log("🛠 Profile Mode:", mode); // You can display this or use it to filter job behavior
-      }
-    };
-    loadProfileMode();
-  }, []);
+ useEffect(() => {
+  const unsubscribe = navigation.addListener('focus', async () => {
+    const mode = await AsyncStorage.getItem('profile_mode');
+    if (mode) {
+      setMode(mode);
+      console.log("🛠 Profile Mode (on focus):", mode);
+    }
+  });
 
+  return unsubscribe;
+}, [navigation]);
   
   const fetchMatchingJobs = async (talent_id) => {
     try {

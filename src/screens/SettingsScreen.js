@@ -1,27 +1,101 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Switch, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Switch, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL } from '@env';
 
 export default function SettingsScreen() {
+  const baseUrl = `${EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL}`;
   const [isActive, setIsActive] = useState(true);
+  const [talentId, setTalentId] = useState(null);
+  const [prefs, setPrefs] = useState({
+    salary_min: '',
+    salary_max: '',
+    dream_companies: '',
+    match_threshold: '80',
+    remote_preference: true,
+    preferred_industries: '',
+    preferred_roles: '',
+  });
 
   useEffect(() => {
-    const loadMode = async () => {
+    const loadModeAndData = async () => {
       const mode = await AsyncStorage.getItem('profile_mode');
-      if (mode !== null) {
-        setIsActive(mode === 'active');
+      setIsActive(mode !== 'passive'); // default to active
+      const talentStr = await AsyncStorage.getItem('talent');
+      const talent = JSON.parse(talentStr || '{}');
+      if (talent?.talent_id) {
+        setTalentId(talent.talent_id);
+        if (mode === 'passive') loadPreferences(talent.talent_id);
       }
     };
-    loadMode();
+    loadModeAndData();
   }, []);
+
+  const loadPreferences = async (talent_id) => {
+    const response = await fetch(`${baseUrl}/get-passive-preferences`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ talent_id }),
+    });
+    const result = await response.json();
+    if (result?.data) {
+      const d = result.data;
+      setPrefs({
+        salary_min: d.salary_min?.toString() || '',
+        salary_max: d.salary_max?.toString() || '',
+        dream_companies: (d.dream_companies || []).join(', '),
+        match_threshold: d.match_threshold?.toString() || '80',
+        remote_preference: d.remote_preference,
+        preferred_industries: (d.preferred_industries || []).join(', '),
+        preferred_roles: (d.preferred_roles || []).join(', '),
+      });
+    }
+  };
 
   const toggleMode = async (value) => {
     setIsActive(value);
-    await AsyncStorage.setItem('profile_mode', value ? 'active' : 'passive');
+    const mode = value ? 'active' : 'passive';
+    await AsyncStorage.setItem('profile_mode', mode);
+    if (!value && talentId) loadPreferences(talentId);
+  };
+
+  const handleChange = (key, value) => {
+    setPrefs((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const savePreferences = async () => {
+    if (!talentId) {
+      Alert.alert('Missing talent ID');
+      return;
+    }
+
+    const payload = {
+      talent_id: talentId,
+      salary_min: parseFloat(prefs.salary_min || 0),
+      salary_max: parseFloat(prefs.salary_max || 0),
+      dream_companies: prefs.dream_companies.split(',').map((s) => s.trim()),
+      match_threshold: parseInt(prefs.match_threshold || '80'),
+      remote_preference: prefs.remote_preference,
+      preferred_industries: prefs.preferred_industries.split(',').map((s) => s.trim()),
+      preferred_roles: prefs.preferred_roles.split(',').map((s) => s.trim()),
+    };
+
+    const response = await fetch(`${baseUrl}/save-passive-preferences`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      Alert.alert('❌ Error', result.error || 'Failed to save preferences.');
+    } else {
+      Alert.alert('✅ Saved', 'Passive preferences updated.');
+    }
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.label}>Profile Mode: {isActive ? 'Active' : 'Passive'}</Text>
       <Switch
         value={isActive}
@@ -29,15 +103,67 @@ export default function SettingsScreen() {
         thumbColor={isActive ? '#4CAF50' : '#ccc'}
         trackColor={{ false: '#767577', true: '#81b0ff' }}
       />
-    </View>
+
+      {!isActive && (
+        <>
+          {renderInput('Dream Companies (comma separated)', 'dream_companies', prefs, handleChange)}
+          {renderInput('Preferred Industries (comma separated)', 'preferred_industries', prefs, handleChange)}
+          {renderInput('Preferred Roles (comma separated)', 'preferred_roles', prefs, handleChange)}
+          {renderInput('Min Salary', 'salary_min', prefs, handleChange, 'numeric')}
+          {renderInput('Max Salary', 'salary_max', prefs, handleChange, 'numeric')}
+          {renderInput('Match Threshold (%)', 'match_threshold', prefs, handleChange, 'numeric')}
+
+          <Text style={styles.label}>Open to Remote Work?</Text>
+          <Switch
+            value={prefs.remote_preference}
+            onValueChange={(val) => handleChange('remote_preference', val)}
+            trackColor={{ false: '#767577', true: '#81b0ff' }}
+          />
+
+          <TouchableOpacity style={styles.saveButton} onPress={savePreferences}>
+            <Text style={styles.saveButtonText}>💾 Save Preferences</Text>
+          </TouchableOpacity>
+        </>
+      )}
+    </ScrollView>
   );
 }
 
+const renderInput = (label, key, state, handleChange, keyboardType = 'default') => (
+  <View style={{ marginTop: 14, width: '90%' }}>
+    <Text style={styles.label}>{label}</Text>
+    <TextInput
+      style={styles.input}
+      value={state[key]}
+      onChangeText={(text) => handleChange(key, text)}
+      keyboardType={keyboardType}
+    />
+  </View>
+);
+
 const styles = StyleSheet.create({
   container: {
-    flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff',
+    padding: 20, paddingBottom: 100, alignItems: 'center', backgroundColor: '#fff',
   },
   label: {
-    fontSize: 18, marginBottom: 12, color: '#333',
+    fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 6,
+  },
+  input: {
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 6,
+    padding: 10,
+    backgroundColor: '#f9f9f9',
+  },
+  saveButton: {
+    marginTop: 20,
+    backgroundColor: '#007bff',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });
