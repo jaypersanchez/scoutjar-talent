@@ -29,32 +29,52 @@ export default function HomeScreen({ navigation }) {
 
   const baseUrl = `${EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL}`;
   const AIbaseUrl = `${EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL}`;
-  const [mode, setMode] = useState('active'); // default is "active"
+  const [mode, setMode] = useState(null); // default is "active"
 
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const userStr = await AsyncStorage.getItem('user');
-        const talentStr = await AsyncStorage.getItem('talent');
-        if (userStr) setUser(JSON.parse(userStr));
-        if (talentStr) {
-          const parsedTalent = JSON.parse(talentStr);
-          setTalent(parsedTalent);
-          await fetchMatchingJobs(parsedTalent.talent_id);
-          await fetchAppliedJobs(parsedTalent.talent_id);
-          await fetchApplicantCounts();
+  const loadData = async () => {
+    try {
+      const userStr = await AsyncStorage.getItem('user');
+      const talentStr = await AsyncStorage.getItem('talent');
+
+      if (userStr) setUser(JSON.parse(userStr));
+
+      if (talentStr) {
+        const parsedTalent = JSON.parse(talentStr);
+        setTalent(parsedTalent);
+
+        // ✅ Set profile mode from talent
+        if (parsedTalent.profile_mode) {
+          setMode(parsedTalent.profile_mode);
+          console.log("🔄 Mode loaded from talent:", parsedTalent.profile_mode);
+        } else {
+          setMode('active');
+          console.warn("⚠️ No profile_mode found in talent. Defaulting to active.");
         }
-      } catch (err) {
-        console.error("❌ Error loading session data:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadData();
-  }, []);
 
-  useEffect(() => {
+        // ✅ Fetch jobs depending on mode
+        if (parsedTalent.profile_mode === 'passive') {
+          await fetchPassiveMatches(parsedTalent.talent_id);
+        } else {
+          await fetchMatchingJobs(parsedTalent.talent_id);
+        }
+
+        await fetchAppliedJobs(parsedTalent.talent_id);
+        await fetchApplicantCounts();
+      }
+    } catch (err) {
+      console.error("❌ Error loading session data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  loadData();
+}, []);
+
+
+  /*useEffect(() => {
     const unsubscribe = navigation.addListener('focus', async () => {
       try {
         const talentStr = await AsyncStorage.getItem('talent');
@@ -69,11 +89,30 @@ export default function HomeScreen({ navigation }) {
         console.error("❌ Error refreshing HomeScreen data:", err);
       }
     });
-  
+
     return unsubscribe;
-  }, [navigation]);
+  }, [navigation]);*/
+  /*useEffect(() => {
+  const unsubscribe = navigation.addListener('focus', async () => {
+    try {
+      const talentStr = await AsyncStorage.getItem('talent');
+      if (talentStr) {
+        const parsedTalent = JSON.parse(talentStr);
+        setTalent(parsedTalent);
+        await fetchMatchingJobs(parsedTalent.talent_id);
+        await fetchAppliedJobs(parsedTalent.talent_id);
+        await fetchApplicantCounts();
+      }
+    } catch (err) {
+      console.error("❌ Error refreshing HomeScreen data:", err);
+    }
+  });
+
+  return unsubscribe;
+}, [navigation]);*/
+
   
- useEffect(() => {
+ /*useEffect(() => {
   const unsubscribe = navigation.addListener('focus', async () => {
     const mode = await AsyncStorage.getItem('profile_mode');
     if (mode) {
@@ -83,8 +122,63 @@ export default function HomeScreen({ navigation }) {
   });
 
   return unsubscribe;
-}, [navigation]);
+}, [navigation]);*/
   
+useEffect(() => {
+  const unsubscribe = navigation.addListener('focus', async () => {
+    try {
+      const talentStr = await AsyncStorage.getItem('talent');
+      const mode = await AsyncStorage.getItem('profile_mode');
+
+      if (mode) {
+        setMode(mode);
+        console.log("🛠 Profile Mode (on focus):", mode);
+      }
+
+      if (talentStr) {
+        const parsedTalent = JSON.parse(talentStr);
+        setTalent(parsedTalent);
+
+        if (mode === 'passive') {
+          await fetchPassiveMatches(parsedTalent.talent_id);
+        } else {
+          await fetchMatchingJobs(parsedTalent.talent_id);
+        }
+
+        await fetchAppliedJobs(parsedTalent.talent_id);
+        await fetchApplicantCounts();
+      }
+    } catch (err) {
+      console.error("❌ Error refreshing HomeScreen data:", err);
+    }
+  });
+
+  return unsubscribe;
+}, [navigation]);
+
+const fetchPassiveMatches = async (talent_id) => {
+  console.log(`${AIbaseUrl}/passive-matches/${talent_id}`)
+  if (!talent_id || isNaN(talent_id)) {
+    console.error("❌ Invalid or missing talent_id:", talent_id);
+    return;
+  }
+
+  try {
+    const res = await fetch(`${AIbaseUrl}/passive-matches/${talent_id}`);
+    const data = await res.json();
+
+    if (!Array.isArray(data.matches)) {
+      console.error("❌ Invalid passive matches response:", data);
+      return;
+    }
+
+    setJobs(data.matches);
+  } catch (err) {
+    console.error("❌ Failed to load passive matches:", err);
+  }
+};
+
+
   const fetchMatchingJobs = async (talent_id) => {
     try {
       const response = await fetch(`${AIbaseUrl}/match-jobs`, {
@@ -282,9 +376,19 @@ export default function HomeScreen({ navigation }) {
         <TouchableOpacity style={[styles.footerIconButton]} onPress={handleSignOut}>
           <Text style={styles.footerIcon}>🚪</Text>
         </TouchableOpacity>
+        
+        {mode === 'passive' && jobs.length > 0 && (
+          <TouchableOpacity
+            style={styles.footerIconButton}
+            onPress={() => Alert.alert("📢 Passive Match", "New job matches based on your dream criteria!")}
+          >
+            <Text style={styles.footerIcon}>🔔</Text>
+          </TouchableOpacity>
+        )}
+
         <Text style={{ textAlign: 'center', color: '#777', marginTop: 4 }}>
-  {mode === 'active' ? '🚀 Active' : '😌 Passive'}
-</Text>
+          {mode === 'active' ? '🚀 Active' : '😌 Passive'}
+        </Text>
       </View>
     </View>
   );
