@@ -124,7 +124,7 @@ export default function HomeScreen({ navigation }) {
   return unsubscribe;
 }, [navigation]);*/
   
-useEffect(() => {
+/*useEffect(() => {
   const unsubscribe = navigation.addListener('focus', async () => {
     try {
       const talentStr = await AsyncStorage.getItem('talent');
@@ -154,7 +154,42 @@ useEffect(() => {
   });
 
   return unsubscribe;
+}, [navigation]);*/
+
+useEffect(() => {
+  const unsubscribe = navigation.addListener('focus', async () => {
+    try {
+      const talentStr = await AsyncStorage.getItem('talent');
+      const modeStr = await AsyncStorage.getItem('profile_mode');
+
+      if (talentStr) {
+        const parsedTalent = JSON.parse(talentStr);
+
+        // Override mode from AsyncStorage
+        const effectiveMode = modeStr || parsedTalent.profile_mode || 'active';
+
+        setTalent(parsedTalent);
+        setMode(effectiveMode);
+        console.log("🔁 Mode on focus:", effectiveMode);
+
+        // Refetch jobs based on latest mode
+        if (effectiveMode === 'passive') {
+          await fetchPassiveMatches(parsedTalent.talent_id);
+        } else {
+          await fetchMatchingJobs(parsedTalent.talent_id);
+        }
+
+        await fetchAppliedJobs(parsedTalent.talent_id);
+        await fetchApplicantCounts();
+      }
+    } catch (err) {
+      console.error("❌ Error refreshing HomeScreen data:", err);
+    }
+  });
+
+  return unsubscribe;
 }, [navigation]);
+
 
 const fetchPassiveMatches = async (talent_id) => {
   console.log(`${AIbaseUrl}/passive-matches/${talent_id}`)
