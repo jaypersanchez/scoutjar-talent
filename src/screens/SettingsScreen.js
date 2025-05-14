@@ -3,7 +3,7 @@ import { View, Text, TextInput, Switch, StyleSheet, ScrollView, TouchableOpacity
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL } from '@env';
 
-export default function SettingsScreen() {
+export default function SettingsScreen({navigation}) {
   const baseUrl = `${EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL}`;
   const [isActive, setIsActive] = useState(true);
   const [talentId, setTalentId] = useState(null);
@@ -53,11 +53,18 @@ export default function SettingsScreen() {
   };
 
   const toggleMode = async (value) => {
-    setIsActive(value);
-    const mode = value ? 'active' : 'passive';
-    await AsyncStorage.setItem('profile_mode', mode);
-    if (!value && talentId) loadPreferences(talentId);
-  };
+  setIsActive(value);
+  const mode = value ? 'active' : 'passive';
+  await AsyncStorage.setItem('profile_mode', mode);
+
+  if (!value && talentId) {
+    await loadPreferences(talentId);
+  }
+
+  // ✅ Force return to Home screen to refresh jobs
+  navigation.navigate('Home');
+};
+
 
   const handleChange = (key, value) => {
     setPrefs((prev) => ({ ...prev, [key]: value }));
