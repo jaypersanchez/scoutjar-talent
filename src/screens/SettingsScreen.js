@@ -102,6 +102,7 @@ export default function SettingsScreen({navigation}) {
   };
 
   return (
+    <View style={{ flex: 1, backgroundColor: '#fff' }}>
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.label}>Profile Mode: {isActive ? 'Active' : 'Passive'}</Text>
       <Switch
@@ -133,6 +134,12 @@ export default function SettingsScreen({navigation}) {
         </>
       )}
     </ScrollView>
+    <View style={styles.footer}>
+      <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('Home')}>
+        <Text style={styles.footerIcon}>🏠</Text>
+      </TouchableOpacity>
+    </View>
+    </View>
   );
 }
 
@@ -173,4 +180,33 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
   },
+  footer: {
+  position: 'absolute',
+  bottom: 0,
+  left: 0,
+  right: 0,
+  flexDirection: 'row',
+  justifyContent: 'center',
+  backgroundColor: 'rgba(125, 74, 234, 0.85)',
+  paddingVertical: 12,
+  borderTopWidth: 0,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: -2 },
+  shadowOpacity: 0.1,
+  shadowRadius: 3,
+  elevation: 5,
+},
+footerIconButton: {
+  backgroundColor: 'transparent',
+  width: 50,
+  height: 50,
+  borderRadius: 25,
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+footerIcon: {
+  fontSize: 22,
+  color: '#ffffff',
+},
+
 });

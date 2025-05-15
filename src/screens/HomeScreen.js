@@ -339,9 +339,21 @@ const fetchPassiveMatches = async (talent_id) => {
           </TouchableOpacity>
         )}
 
-        <Text style={{ textAlign: 'center', color: '#777', marginTop: 4 }}>
-          {mode === 'active' ? '🚀 Active' : '😌 Passive'}
-        </Text>
+        <Text
+  style={{
+    textAlign: 'center',
+    color: '#ffffff', // much more visible on purple
+    marginTop: 4,
+    fontSize: mode === 'active' ? 20 : 16,
+    fontWeight: 'bold',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  }}
+>
+  {mode === 'active' ? '🚀 Active' : '😌 Passive'}
+</Text>
+
       </View>
     </View>
   );
