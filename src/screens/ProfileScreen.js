@@ -71,41 +71,6 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
-  /*useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        const talentStr = await AsyncStorage.getItem('talent');
-        if (!talentStr) {
-          Alert.alert('Error', 'No talent data found in session');
-          return;
-        }
-        const talent = JSON.parse(talentStr);
-        if (!talent?.talent_id) {
-          Alert.alert('Error', 'Missing talent_id in session');
-          return;
-        }
-        setProfile({
-          talent_id: talent.talent_id,
-          user_id: talent.user_id,
-          bio: talent.bio || '',
-          resume: talent.resume || '',
-          skills: Array.isArray(talent.skills) ? talent.skills.join(', ') : '',
-          experience: talent.experience || '',
-          education: talent.education || '',
-          desired_salary: talent.desired_salary?.toString() || '',
-          location: talent.location || '',
-          work_preferences: talent.work_preferences || '',
-          employment_type: talent.employment_type || '',
-          availability: talent.availability || '',
-        });
-      } catch (err) {
-        console.error('❌ Failed to load profile from session:', err);
-        Alert.alert('Error', 'Failed to load profile data.');
-      }
-    };
-    loadProfile();
-  }, []);*/
-  
   useEffect(() => {
     const loadProfile = async () => {
       try {
@@ -320,28 +285,35 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   footer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: '#ffffff',
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#ddd',
-  },
-  footerIconButton: {
-    backgroundColor: '#ffffff',
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: 6,
-  },
-  footerIcon: {
-    fontSize: 22,
-    color: '#ffffff',
-  },
+  position: 'absolute',
+  bottom: 0,
+  left: 0,
+  right: 0,
+  flexDirection: 'row',
+  justifyContent: 'space-around',
+  backgroundColor: 'rgba(125, 74, 234, 0.85)', // semi-transparent purple
+  paddingVertical: 12,
+  borderTopWidth: 0,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: -2 },
+  shadowOpacity: 0.1,
+  shadowRadius: 3,
+  elevation: 5,
+},
+
+footerIconButton: {
+  backgroundColor: 'transparent',
+  width: 50,
+  height: 50,
+  borderRadius: 25,
+  justifyContent: 'center',
+  alignItems: 'center',
+  marginHorizontal: 6,
+},
+
+footerIcon: {
+  fontSize: 22,
+  color: '#ffffff',
+},
+
 });

@@ -72,89 +72,7 @@ export default function HomeScreen({ navigation }) {
 
   loadData();
 }, []);
-
-
-  /*useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', async () => {
-      try {
-        const talentStr = await AsyncStorage.getItem('talent');
-        if (talentStr) {
-          const parsedTalent = JSON.parse(talentStr);
-          setTalent(parsedTalent);
-          await fetchMatchingJobs(parsedTalent.talent_id);
-          await fetchAppliedJobs(parsedTalent.talent_id);
-          await fetchApplicantCounts();
-        }
-      } catch (err) {
-        console.error("❌ Error refreshing HomeScreen data:", err);
-      }
-    });
-
-    return unsubscribe;
-  }, [navigation]);*/
-  /*useEffect(() => {
-  const unsubscribe = navigation.addListener('focus', async () => {
-    try {
-      const talentStr = await AsyncStorage.getItem('talent');
-      if (talentStr) {
-        const parsedTalent = JSON.parse(talentStr);
-        setTalent(parsedTalent);
-        await fetchMatchingJobs(parsedTalent.talent_id);
-        await fetchAppliedJobs(parsedTalent.talent_id);
-        await fetchApplicantCounts();
-      }
-    } catch (err) {
-      console.error("❌ Error refreshing HomeScreen data:", err);
-    }
-  });
-
-  return unsubscribe;
-}, [navigation]);*/
-
   
- /*useEffect(() => {
-  const unsubscribe = navigation.addListener('focus', async () => {
-    const mode = await AsyncStorage.getItem('profile_mode');
-    if (mode) {
-      setMode(mode);
-      console.log("🛠 Profile Mode (on focus):", mode);
-    }
-  });
-
-  return unsubscribe;
-}, [navigation]);*/
-  
-/*useEffect(() => {
-  const unsubscribe = navigation.addListener('focus', async () => {
-    try {
-      const talentStr = await AsyncStorage.getItem('talent');
-      const mode = await AsyncStorage.getItem('profile_mode');
-
-      if (mode) {
-        setMode(mode);
-        console.log("🛠 Profile Mode (on focus):", mode);
-      }
-
-      if (talentStr) {
-        const parsedTalent = JSON.parse(talentStr);
-        setTalent(parsedTalent);
-
-        if (mode === 'passive') {
-          await fetchPassiveMatches(parsedTalent.talent_id);
-        } else {
-          await fetchMatchingJobs(parsedTalent.talent_id);
-        }
-
-        await fetchAppliedJobs(parsedTalent.talent_id);
-        await fetchApplicantCounts();
-      }
-    } catch (err) {
-      console.error("❌ Error refreshing HomeScreen data:", err);
-    }
-  });
-
-  return unsubscribe;
-}, [navigation]);*/
 
 useEffect(() => {
   const unsubscribe = navigation.addListener('focus', async () => {
@@ -488,28 +406,37 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   footer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: '#ffffff',
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-  },
-  footerIconButton: {
-    backgroundColor: '#ffffff', // ← WHITE
-    borderWidth: 1,
-    borderColor: '#ccc',        // Optional subtle border
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: 6,
-  },  
+  position: 'absolute',
+  bottom: 0,
+  left: 0,
+  right: 0,
+  flexDirection: 'row',
+  justifyContent: 'space-around',
+  backgroundColor: 'rgba(125, 74, 234, 0.85)', // semi-transparent purple
+  paddingVertical: 12,
+  borderTopWidth: 0, // Remove border
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: -2 },
+  shadowOpacity: 0.1,
+  shadowRadius: 3,
+  elevation: 5, // Android shadow
+},
+
+footerIconButton: {
+  backgroundColor: 'transparent', // Transparent circle
+  width: 50,
+  height: 50,
+  borderRadius: 25,
+  justifyContent: 'center',
+  alignItems: 'center',
+  marginHorizontal: 6,
+},
+
+footerIcon: {
+  fontSize: 22,
+  color: '#ffffff', // white icons for visibility on purple
+},
+  
   footerIcon: {
     fontSize: 22,
     color: '#ffffff',

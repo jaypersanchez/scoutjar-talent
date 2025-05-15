@@ -88,9 +88,9 @@ export default function AppliedJobsScreen({ navigation }) {
   return (
     <View style={{ flex: 1, backgroundColor: '#ffffff' }}>
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 100 }}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        {/*<TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Text style={styles.backText}>← Back to Home</Text>
-        </TouchableOpacity>
+        </TouchableOpacity>*/}
 
         <Text style={[commonStyles.title, { fontSize: 20, color: '#000000', marginBottom: 20 }]}>
           📋 Jobs You Applied For
@@ -153,6 +153,12 @@ export default function AppliedJobsScreen({ navigation }) {
           ))
         )}
       </ScrollView>
+      <View style={styles.footer}>
+  <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('Home')}>
+    <Text style={styles.footerIcon}>🏠</Text>
+  </TouchableOpacity>
+</View>
+
     </View>
   );
 }
@@ -232,4 +238,33 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontWeight: 'bold',
   },
+  footer: {
+  position: 'absolute',
+  bottom: 0,
+  left: 0,
+  right: 0,
+  flexDirection: 'row',
+  justifyContent: 'center',
+  backgroundColor: 'rgba(125, 74, 234, 0.85)', // semi-transparent purple
+  paddingVertical: 12,
+  borderTopWidth: 0,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: -2 },
+  shadowOpacity: 0.1,
+  shadowRadius: 3,
+  elevation: 5,
+},
+footerIconButton: {
+  backgroundColor: 'transparent',
+  width: 50,
+  height: 50,
+  borderRadius: 25,
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+footerIcon: {
+  fontSize: 22,
+  color: '#ffffff',
+},
+
 });
