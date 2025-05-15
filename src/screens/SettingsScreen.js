@@ -118,7 +118,7 @@ export default function SettingsScreen({navigation}) {
           {renderInput('Preferred Industries (comma separated)', 'preferred_industries', prefs, handleChange)}
           {renderInput('Preferred Roles (comma separated)', 'preferred_roles', prefs, handleChange)}
           {renderInput('Min Salary', 'salary_min', prefs, handleChange, 'numeric')}
-          {renderInput('Max Salary', 'salary_max', prefs, handleChange, 'numeric')}
+          {/*renderInput('Max Salary', 'salary_max', prefs, handleChange, 'numeric')*/}
           {renderInput('Match Threshold (%)', 'match_threshold', prefs, handleChange, 'numeric')}
 
           <Text style={styles.label}>Open to Remote Work?</Text>
