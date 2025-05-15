@@ -179,7 +179,10 @@ const fetchPassiveMatches = async (talent_id) => {
       if (!res.ok) throw new Error(data.error || "Failed to get recruiter info");
       setRecruiterInfoMap(prev => ({ ...prev, [job_id]: data }));
     } catch (err) {
-      console.error(`❌ Failed to fetch recruiter info for job ${job_id}:`, err);
+      /*if (__DEV__) {
+  console.error(`❌ Failed to fetch recruiter info for job ${job_id}:`, err);
+}*/
+
     }
   };
 

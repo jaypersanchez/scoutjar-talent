@@ -4,7 +4,7 @@ export default {
     slug: "scoutjar-talent",
     version: "1.0.0",
     orientation: "portrait",
-    icon: "./assets/icon.png",
+    icon: "./assets/lookk_icon_1024.png",
     userInterfaceStyle: "light",
     splash: {
       image: "./assets/splash-icon.png",
