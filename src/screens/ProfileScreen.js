@@ -56,9 +56,7 @@ export default function ProfileScreen({ navigation }) {
       const response = await fetch(`${AIbaseUrl}/upload-resume`, {
         method: 'POST',
         body: formData,
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
 
       const data = await response.json();
@@ -75,20 +73,16 @@ export default function ProfileScreen({ navigation }) {
     const loadProfile = async () => {
       try {
         const talentStr = await AsyncStorage.getItem('talent');
-        console.log('📦 Raw talent string from AsyncStorage:', talentStr);
-
         if (!talentStr) {
           Alert.alert('Error', 'No talent data found in session');
           return;
         }
         const talent = JSON.parse(talentStr);
-        console.log('👤 Parsed talent object:', talent);
-        
         setProfile({
           talent_id: talent.talent_id,
           user_id: talent.user_id,
           bio: talent.bio || '',
-          resume: '', // hide it — don't show raw content
+          resume: '',
           skills: Array.isArray(talent.skills) ? talent.skills.join(', ') : '',
           experience: talent.experience || '',
           education: talent.education || '',
@@ -103,24 +97,33 @@ export default function ProfileScreen({ navigation }) {
         Alert.alert('Error', 'Failed to load profile data.');
       }
     };
-  
     loadProfile();
   }, []);
-  
-  
-  
 
   const handleChange = (key, value) => {
     setProfile((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleSave = async () => {
-    try {
-      if (!profile.talent_id) {
-        Alert.alert('Error', 'Missing talent_id in profile data.');
+    const requiredFields = {
+      bio: profile.bio,
+      skills: profile.skills,
+      education: profile.education,
+      desired_salary: profile.desired_salary,
+      location: profile.location,
+      availability: profile.availability,
+      employment_type: profile.employment_type,
+    };
+
+    for (const [key, value] of Object.entries(requiredFields)) {
+      if (!value || value.trim() === '') {
+        const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        Alert.alert('Required Field Missing', `Please complete the "${label}" field.`);
         return;
       }
+    }
 
+    try {
       const payload = {
         talent_id: profile.talent_id,
         bio: profile.bio,
@@ -129,7 +132,7 @@ export default function ProfileScreen({ navigation }) {
         experience: profile.experience,
         education: profile.education,
         work_preferences: profile.work_preferences,
-        employment_type: profile.employment_type, // ✅ FIXED
+        employment_type: profile.employment_type,
         desired_salary: parseFloat(profile.desired_salary || 0),
         location: profile.location,
         availability: profile.availability,
@@ -158,55 +161,40 @@ export default function ProfileScreen({ navigation }) {
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 150 }}>
         <Text style={styles.pageTitle}>📝 Edit Your Profile</Text>
 
-        {renderField('Bio', 'bio', profile.bio, handleChange, true)}
+        {renderField('Bio', 'bio', profile.bio, handleChange, true, 'default', true)}
 
-        {/* RESUME FIELD HIDDEN */}
-
-        {/* Upload Resume with Label */}
+        {/* Upload Resume */}
         <View style={{ alignItems: 'center', marginTop: 10 }}>
           <Text style={{ color: '#000', marginBottom: 6 }}>Upload Resume</Text>
-          <TouchableOpacity
-            style={[styles.footerIconButton, { backgroundColor: '#5555aa' }]}
-            onPress={handleUploadResume}
-          >
+          <TouchableOpacity style={[styles.footerIconButton, { backgroundColor: '#5555aa' }]} onPress={handleUploadResume}>
             <Text style={styles.footerIcon}>📄</Text>
           </TouchableOpacity>
         </View>
 
-        {renderField('Skills (comma separated)', 'skills', profile.skills, handleChange)}
+        {renderField('Skills (comma separated)', 'skills', profile.skills, handleChange, false, 'default', true)}
 
         <Text style={styles.label}>Experience Level</Text>
-        <Picker
-          selectedValue={profile.experience}
-          onValueChange={(val) => handleChange('experience', val)}
-          style={styles.picker}
-        >
+        <Picker selectedValue={profile.experience} onValueChange={(val) => handleChange('experience', val)} style={styles.picker}>
           <Picker.Item label="Select..." value="" />
           <Picker.Item label="Senior" value="Senior" />
           <Picker.Item label="Intermediate" value="Intermediate" />
           <Picker.Item label="Junior" value="Junior" />
         </Picker>
 
-        {renderField('Education', 'education', profile.education, handleChange)}
-
+        {renderField('Education', 'education', profile.education, handleChange, false, 'default', true)}
+        
         <Text style={styles.label}>Work Preferences</Text>
-        <Picker
-          selectedValue={profile.work_preferences}
-          onValueChange={(val) => handleChange('work_preferences', val)}
-          style={styles.picker}
-        >
+        <Picker selectedValue={profile.work_preferences} onValueChange={(val) => handleChange('work_preferences', val)} style={styles.picker}>
           <Picker.Item label="Select..." value="" />
           <Picker.Item label="Remote" value="Remote" />
           <Picker.Item label="Hybrid" value="Hybrid" />
           <Picker.Item label="On-site" value="On-site" />
         </Picker>
 
-        <Text style={styles.label}>Employment Type</Text>
-        <Picker
-          selectedValue={profile.employment_type}
-          onValueChange={(val) => handleChange('employment_type', val)}
-          style={styles.picker}
-        >
+        <Text style={styles.label}>
+          Employment Type <Text style={{ color: 'red' }}>*</Text>
+        </Text>
+        <Picker selectedValue={profile.employment_type} onValueChange={(val) => handleChange('employment_type', val)} style={styles.picker}>
           <Picker.Item label="Select..." value="" />
           <Picker.Item label="Full-time" value="Full-time" />
           <Picker.Item label="Part-time" value="Part-time" />
@@ -215,15 +203,13 @@ export default function ProfileScreen({ navigation }) {
           <Picker.Item label="Internship" value="Internship" />
         </Picker>
 
-        {renderField('Desired Salary', 'desired_salary', profile.desired_salary, handleChange, false, 'numeric')}
-        {renderField('Location', 'location', profile.location, handleChange)}
+        {renderField('Desired Salary', 'desired_salary', profile.desired_salary, handleChange, false, 'numeric', true)}
+        {renderField('Location', 'location', profile.location, handleChange, false, 'default', true)}
 
-        <Text style={styles.label}>Availability</Text>
-        <Picker
-          selectedValue={profile.availability}
-          onValueChange={(val) => handleChange('availability', val)}
-          style={styles.picker}
-        >
+        <Text style={styles.label}>
+          Availability <Text style={{ color: 'red' }}>*</Text>
+        </Text>
+        <Picker selectedValue={profile.availability} onValueChange={(val) => handleChange('availability', val)} style={styles.picker}>
           <Picker.Item label="Select..." value="" />
           <Picker.Item label="Immediate" value="Immediate" />
           <Picker.Item label="Two Weeks Notice" value="Two Weeks Notice" />
@@ -237,7 +223,7 @@ export default function ProfileScreen({ navigation }) {
         <TouchableOpacity style={styles.footerIconButton} onPress={handleSave}>
           <Text style={styles.footerIcon}>💾</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.footerIconButton]} onPress={() => navigation.navigate('Home')}>
+        <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('Home')}>
           <Text style={styles.footerIcon}>🏠</Text>
         </TouchableOpacity>
       </View>
@@ -245,9 +231,11 @@ export default function ProfileScreen({ navigation }) {
   );
 }
 
-const renderField = (label, field, value, handleChange, multiline = false, keyboardType = 'default') => (
+const renderField = (label, field, value, handleChange, multiline = false, keyboardType = 'default', required = false) => (
   <>
-    <Text style={styles.label}>{label}</Text>
+    <Text style={styles.label}>
+      {label} {required && <Text style={{ color: 'red' }}>*</Text>}
+    </Text>
     <TextInput
       style={styles.input}
       value={value}
@@ -257,7 +245,6 @@ const renderField = (label, field, value, handleChange, multiline = false, keybo
     />
   </>
 );
-
 const styles = StyleSheet.create({
   pageTitle: {
     fontSize: 22,
