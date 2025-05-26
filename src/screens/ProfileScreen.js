@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
+import { MaterialIcons } from '@expo/vector-icons';
 import {
   EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL,
   EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL,
@@ -163,11 +164,10 @@ export default function ProfileScreen({ navigation }) {
 
         {renderField('Bio', 'bio', profile.bio, handleChange, true, 'default', true)}
 
-        {/* Upload Resume */}
         <View style={{ alignItems: 'center', marginTop: 10 }}>
           <Text style={{ color: '#000', marginBottom: 6 }}>Upload Resume</Text>
           <TouchableOpacity style={[styles.footerIconButton, { backgroundColor: '#5555aa' }]} onPress={handleUploadResume}>
-            <Text style={styles.footerIcon}>📄</Text>
+            <MaterialIcons name="upload-file" size={26} color="#ffffff" />
           </TouchableOpacity>
         </View>
 
@@ -182,7 +182,7 @@ export default function ProfileScreen({ navigation }) {
         </Picker>
 
         {renderField('Education', 'education', profile.education, handleChange, false, 'default', true)}
-        
+
         <Text style={styles.label}>Work Preferences</Text>
         <Picker selectedValue={profile.work_preferences} onValueChange={(val) => handleChange('work_preferences', val)} style={styles.picker}>
           <Picker.Item label="Select..." value="" />
@@ -191,9 +191,7 @@ export default function ProfileScreen({ navigation }) {
           <Picker.Item label="On-site" value="On-site" />
         </Picker>
 
-        <Text style={styles.label}>
-          Employment Type <Text style={{ color: 'red' }}>*</Text>
-        </Text>
+        <Text style={styles.label}>Employment Type <Text style={{ color: 'red' }}>*</Text></Text>
         <Picker selectedValue={profile.employment_type} onValueChange={(val) => handleChange('employment_type', val)} style={styles.picker}>
           <Picker.Item label="Select..." value="" />
           <Picker.Item label="Full-time" value="Full-time" />
@@ -206,9 +204,7 @@ export default function ProfileScreen({ navigation }) {
         {renderField('Desired Salary', 'desired_salary', profile.desired_salary, handleChange, false, 'numeric', true)}
         {renderField('Location', 'location', profile.location, handleChange, false, 'default', true)}
 
-        <Text style={styles.label}>
-          Availability <Text style={{ color: 'red' }}>*</Text>
-        </Text>
+        <Text style={styles.label}>Availability <Text style={{ color: 'red' }}>*</Text></Text>
         <Picker selectedValue={profile.availability} onValueChange={(val) => handleChange('availability', val)} style={styles.picker}>
           <Picker.Item label="Select..." value="" />
           <Picker.Item label="Immediate" value="Immediate" />
@@ -221,10 +217,10 @@ export default function ProfileScreen({ navigation }) {
 
       <View style={styles.footer}>
         <TouchableOpacity style={styles.footerIconButton} onPress={handleSave}>
-          <Text style={styles.footerIcon}>💾</Text>
+          <MaterialIcons name="save" size={26} color="#7D4AEA" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('Home')}>
-          <Text style={styles.footerIcon}>🏠</Text>
+          <MaterialIcons name="home" size={26} color="#7D4AEA" />
         </TouchableOpacity>
       </View>
     </View>
@@ -245,6 +241,7 @@ const renderField = (label, field, value, handleChange, multiline = false, keybo
     />
   </>
 );
+
 const styles = StyleSheet.create({
   pageTitle: {
     fontSize: 22,
@@ -272,35 +269,32 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   footer: {
-  position: 'absolute',
-  bottom: 0,
-  left: 0,
-  right: 0,
-  flexDirection: 'row',
-  justifyContent: 'space-around',
-  backgroundColor: 'rgba(125, 74, 234, 0.85)', // semi-transparent purple
-  paddingVertical: 12,
-  borderTopWidth: 0,
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: -2 },
-  shadowOpacity: 0.1,
-  shadowRadius: 3,
-  elevation: 5,
-},
-
-footerIconButton: {
-  backgroundColor: 'transparent',
-  width: 50,
-  height: 50,
-  borderRadius: 25,
-  justifyContent: 'center',
-  alignItems: 'center',
-  marginHorizontal: 6,
-},
-
-footerIcon: {
-  fontSize: 22,
-  color: '#ffffff',
-},
-
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: '#ffffff',
+    paddingVertical: 12,
+    borderTopWidth: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  footerIconButton: {
+    backgroundColor: '#f0f0f5',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 6,
+  },
+  footerIcon: {
+    fontSize: 22,
+    color: '#7D4AEA',
+  },
 });

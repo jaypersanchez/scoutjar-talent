@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { MaterialIcons } from '@expo/vector-icons';
 import {
   View,
   Text,
@@ -321,7 +322,8 @@ const fetchPassiveMatches = async (talent_id) => {
       {/* Fixed Footer with Icons */}
       <View style={styles.footer}>
         <TouchableOpacity style={styles.footerIconButton} onPress={goToProfile}>
-          <Text style={styles.footerIcon}>📋</Text>
+          {/*<Text style={styles.footerIcon}>📋</Text>*/}
+          <MaterialIcons name="person" size={26} color="#7D4AEA" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('AppliedJobs')}>
           <Text style={styles.footerIcon}>🗂️</Text>
@@ -345,7 +347,7 @@ const fetchPassiveMatches = async (talent_id) => {
         <Text
   style={{
     textAlign: 'center',
-    color: '#ffffff', // much more visible on purple
+    color: mode === 'active' ? '#00C853' : '#7D4AEA', // much more visible on purple
     marginTop: 4,
     fontSize: mode === 'active' ? 20 : 16,
     fontWeight: 'bold',
@@ -427,7 +429,8 @@ const styles = StyleSheet.create({
   right: 0,
   flexDirection: 'row',
   justifyContent: 'space-around',
-  backgroundColor: 'rgba(125, 74, 234, 0.85)', // semi-transparent purple
+  backgroundColor: '#ffffff',
+  //backgroundColor: 'rgba(125, 74, 234, 0.85)', // semi-transparent purple
   paddingVertical: 12,
   borderTopWidth: 0, // Remove border
   shadowColor: '#000',
@@ -438,7 +441,7 @@ const styles = StyleSheet.create({
 },
 
 footerIconButton: {
-  backgroundColor: 'transparent', // Transparent circle
+  backgroundColor: '#f0f0f5', // Transparent circle
   width: 50,
   height: 50,
   borderRadius: 25,
@@ -449,7 +452,7 @@ footerIconButton: {
 
 footerIcon: {
   fontSize: 22,
-  color: '#ffffff', // white icons for visibility on purple
+  color: '#7D4AEA', // white icons for visibility on purple
 },
   
   footerIcon: {

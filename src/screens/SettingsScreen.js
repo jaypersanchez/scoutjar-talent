@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Switch, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL } from '@env';
+import { MaterialIcons } from '@expo/vector-icons';
 
 export default function SettingsScreen({navigation}) {
   const baseUrl = `${EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL}`;
@@ -53,18 +54,14 @@ export default function SettingsScreen({navigation}) {
   };
 
   const toggleMode = async (value) => {
-  setIsActive(value);
-  const mode = value ? 'active' : 'passive';
-  await AsyncStorage.setItem('profile_mode', mode);
-
-  if (!value && talentId) {
-    await loadPreferences(talentId);
-  }
-
-  // ✅ Force return to Home screen to refresh jobs
-  navigation.navigate('Home');
-};
-
+    setIsActive(value);
+    const mode = value ? 'active' : 'passive';
+    await AsyncStorage.setItem('profile_mode', mode);
+    if (!value && talentId) {
+      await loadPreferences(talentId);
+    }
+    navigation.navigate('Home');
+  };
 
   const handleChange = (key, value) => {
     setPrefs((prev) => ({ ...prev, [key]: value }));
@@ -103,42 +100,41 @@ export default function SettingsScreen({navigation}) {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.label}>Profile Mode: {isActive ? 'Active' : 'Passive'}</Text>
-      <Switch
-        value={isActive}
-        onValueChange={toggleMode}
-        thumbColor={isActive ? '#4CAF50' : '#ccc'}
-        trackColor={{ false: '#767577', true: '#81b0ff' }}
-      />
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.label}>Profile Mode: {isActive ? 'Active' : 'Passive'}</Text>
+        <Switch
+          value={isActive}
+          onValueChange={toggleMode}
+          thumbColor={isActive ? '#4CAF50' : '#ccc'}
+          trackColor={{ false: '#767577', true: '#81b0ff' }}
+        />
 
-      {!isActive && (
-        <>
-          {renderInput('Dream Companies (comma separated)', 'dream_companies', prefs, handleChange)}
-          {renderInput('Preferred Industries (comma separated)', 'preferred_industries', prefs, handleChange)}
-          {renderInput('Preferred Roles (comma separated)', 'preferred_roles', prefs, handleChange)}
-          {renderInput('Min Salary', 'salary_min', prefs, handleChange, 'numeric')}
-          {/*renderInput('Max Salary', 'salary_max', prefs, handleChange, 'numeric')*/}
-          {renderInput('Match Threshold (%)', 'match_threshold', prefs, handleChange, 'numeric')}
+        {!isActive && (
+          <>
+            {renderInput('Dream Companies (comma separated)', 'dream_companies', prefs, handleChange)}
+            {renderInput('Preferred Industries (comma separated)', 'preferred_industries', prefs, handleChange)}
+            {renderInput('Preferred Roles (comma separated)', 'preferred_roles', prefs, handleChange)}
+            {renderInput('Min Salary', 'salary_min', prefs, handleChange, 'numeric')}
+            {renderInput('Match Threshold (%)', 'match_threshold', prefs, handleChange, 'numeric')}
 
-          <Text style={styles.label}>Open to Remote Work?</Text>
-          <Switch
-            value={prefs.remote_preference}
-            onValueChange={(val) => handleChange('remote_preference', val)}
-            trackColor={{ false: '#767577', true: '#81b0ff' }}
-          />
+            <Text style={styles.label}>Open to Remote Work?</Text>
+            <Switch
+              value={prefs.remote_preference}
+              onValueChange={(val) => handleChange('remote_preference', val)}
+              trackColor={{ false: '#767577', true: '#81b0ff' }}
+            />
 
-          <TouchableOpacity style={styles.saveButton} onPress={savePreferences}>
-            <Text style={styles.saveButtonText}>💾 Save Preferences</Text>
-          </TouchableOpacity>
-        </>
-      )}
-    </ScrollView>
-    <View style={styles.footer}>
-      <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('Home')}>
-        <Text style={styles.footerIcon}>🏠</Text>
-      </TouchableOpacity>
-    </View>
+            <TouchableOpacity style={styles.saveButton} onPress={savePreferences}>
+              <Text style={styles.saveButtonText}>💾 Save Preferences</Text>
+            </TouchableOpacity>
+          </>
+        )}
+      </ScrollView>
+      <View style={styles.footer}>
+        <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('Home')}>
+          <MaterialIcons name="home" size={26} color="#7D4AEA" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -181,32 +177,31 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   footer: {
-  position: 'absolute',
-  bottom: 0,
-  left: 0,
-  right: 0,
-  flexDirection: 'row',
-  justifyContent: 'center',
-  backgroundColor: 'rgba(125, 74, 234, 0.85)',
-  paddingVertical: 12,
-  borderTopWidth: 0,
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: -2 },
-  shadowOpacity: 0.1,
-  shadowRadius: 3,
-  elevation: 5,
-},
-footerIconButton: {
-  backgroundColor: 'transparent',
-  width: 50,
-  height: 50,
-  borderRadius: 25,
-  justifyContent: 'center',
-  alignItems: 'center',
-},
-footerIcon: {
-  fontSize: 22,
-  color: '#ffffff',
-},
-
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    backgroundColor: '#ffffff',
+    paddingVertical: 12,
+    borderTopWidth: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  footerIconButton: {
+    backgroundColor: '#f0f0f5',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  footerIcon: {
+    fontSize: 22,
+    color: '#7D4AEA',
+  },
 });
