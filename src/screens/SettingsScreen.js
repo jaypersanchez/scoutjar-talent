@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Switch, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL } from '@env';
+import { EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL } from '@env';
 import { MaterialIcons } from '@expo/vector-icons';
 
 export default function SettingsScreen({navigation}) {
   const baseUrl = `${EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL}`;
+  const serverBaseUrl = `${EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL}`;
   const [isActive, setIsActive] = useState(true);
   const [talentId, setTalentId] = useState(null);
   const [prefs, setPrefs] = useState({

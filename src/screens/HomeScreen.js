@@ -18,6 +18,10 @@ import {
   EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL,
   EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL
 } from '@env';
+import appliedIcon from '../../assets/icon-menu/appliedjobs.png'
+import exitIcon from '../../assets/icon-menu/exit.png';
+import profileIcon from '../../assets/icon-menu/profile.png';
+import settingsIcon from '../../assets/icon-menu/settings.png';
 
 export default function HomeScreen({ navigation }) {
   const [jobs, setJobs] = useState([]);
@@ -31,6 +35,8 @@ export default function HomeScreen({ navigation }) {
   const baseUrl = `${EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL}`;
   const AIbaseUrl = `${EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL}`;
   const [mode, setMode] = useState(null); // default is "active"
+  const [currentIndex, setCurrentIndex] = useState(0);
+
 
 
   useEffect(() => {
@@ -109,6 +115,13 @@ useEffect(() => {
   return unsubscribe;
 }, [navigation]);
 
+const handleSwipe = (direction) => {
+  if (direction === 'left' && currentIndex < jobs.length - 1) {
+    setCurrentIndex(currentIndex + 1);
+  } else if (direction === 'right' && currentIndex > 0) {
+    setCurrentIndex(currentIndex - 1);
+  }
+};
 
 const fetchPassiveMatches = async (talent_id) => {
   console.log(`${AIbaseUrl}/passive-matches/${talent_id}`)
@@ -321,45 +334,50 @@ const fetchPassiveMatches = async (talent_id) => {
   
       {/* Fixed Footer with Icons */}
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.footerIconButton} onPress={goToProfile}>
-          {/*<Text style={styles.footerIcon}>📋</Text>*/}
-          <MaterialIcons name="person" size={26} color="#7D4AEA" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('AppliedJobs')}>
-          <Text style={styles.footerIcon}>🗂️</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('Settings')}>
-          <Text style={styles.footerIcon}>⚙️</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.footerIconButton]} onPress={handleSignOut}>
-          <Text style={styles.footerIcon}>🚪</Text>
-        </TouchableOpacity>
-        
-        {mode === 'passive' && jobs.length > 0 && (
-          <TouchableOpacity
-            style={styles.footerIconButton}
-            onPress={() => Alert.alert("📢 Passive Match", "New job matches based on your dream criteria!")}
-          >
-            <Text style={styles.footerIcon}>🔔</Text>
-          </TouchableOpacity>
-        )}
+  <TouchableOpacity style={styles.footerIconButton} onPress={goToProfile}>
+    <Image source={profileIcon} style={styles.footerImage} />
+  </TouchableOpacity>
 
-        <Text
-  style={{
-    textAlign: 'center',
-    color: mode === 'active' ? '#00C853' : '#7D4AEA', // much more visible on purple
-    marginTop: 4,
-    fontSize: mode === 'active' ? 20 : 16,
-    fontWeight: 'bold',
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  }}
->
-  {mode === 'active' ? '🚀 Active' : '😌 Passive'}
-</Text>
+  <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('AppliedJobs')}>
+    <Image source={appliedIcon} style={styles.footerImage} />
+  </TouchableOpacity>
 
-      </View>
+  <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('Settings')}>
+    <Image source={settingsIcon} style={styles.footerImage} />
+  </TouchableOpacity>
+
+  <TouchableOpacity style={styles.footerIconButton} onPress={handleSignOut}>
+    <Image source={exitIcon} style={styles.footerImage} />
+  </TouchableOpacity>
+
+  {mode === 'passive' && jobs.length > 0 && (
+    <TouchableOpacity
+      style={styles.footerIconButton}
+      onPress={() =>
+        Alert.alert("📢 Passive Match", "New job matches based on your dream criteria!")
+      }
+    >
+      <Text style={styles.footerIcon}>🔔</Text>
+    </TouchableOpacity>
+  )}
+
+  <Text
+    style={{
+      textAlign: 'center',
+      color: mode === 'active' ? '#00C853' : '#7D4AEA',
+      marginTop: 4,
+      fontSize: mode === 'active' ? 20 : 16,
+      fontWeight: 'bold',
+      textShadowColor: 'rgba(0, 0, 0, 0.2)',
+      textShadowOffset: { width: 0, height: 1 },
+      textShadowRadius: 2,
+    }}
+  >
+    {mode === 'active' ? '🚀 Active' : '😌 Passive'}
+  </Text>
+</View>
+
+
     </View>
   );
   
@@ -459,4 +477,12 @@ footerIcon: {
     fontSize: 22,
     color: '#ffffff',
   },
+
+  footerImage: {
+  width: 26,
+  height: 26,
+  resizeMode: 'contain',
+}
+
+
 });
