@@ -55,7 +55,7 @@ export default function SettingsScreen({navigation}) {
     }
   };
 
-  const toggleMode = async (value) => {
+  /*const toggleMode = async (value) => {
     setIsActive(value);
     const mode = value ? 'active' : 'passive';
     await AsyncStorage.setItem('profile_mode', mode);
@@ -64,6 +64,34 @@ export default function SettingsScreen({navigation}) {
     }
     navigation.navigate('Home');
   };
+  */
+  const toggleMode = async (value) => {
+    const mode = value ? 'active' : 'passive';
+    setIsActive(value);
+    await AsyncStorage.setItem('profile_mode', mode);
+
+    if (talentId) {
+      try {
+        await fetch(`${serverBaseUrl}/update-profile-mode`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ talent_id: talentId, profile_mode: mode })
+        });
+
+        const talentStr = await AsyncStorage.getItem('talent');
+        const parsedTalent = JSON.parse(talentStr || '{}');
+        parsedTalent.profile_mode = mode;
+        await AsyncStorage.setItem('talent', JSON.stringify(parsedTalent));
+      } catch (err) {
+        console.error('❌ Failed to update profile mode in backend:', err);
+      }
+
+      if (!value) await loadPreferences(talentId);
+    }
+
+    navigation.navigate('Home');
+  };
+
 
   const handleChange = (key, value) => {
     setPrefs((prev) => ({ ...prev, [key]: value }));
