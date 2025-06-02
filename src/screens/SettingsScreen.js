@@ -1,13 +1,14 @@
+// SettingsScreen.js
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Switch, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL } from '@env';
-import { EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL } from '@env';
+import { EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL, EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL } from '@env';
 import { MaterialIcons } from '@expo/vector-icons';
 
-export default function SettingsScreen({navigation}) {
-  const baseUrl = `${EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL}`;
-  const serverBaseUrl = `${EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL}`;
+export default function SettingsScreen({ navigation }) {
+  const baseUrl = EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL;
+  const serverBaseUrl = EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL;
+
   const [isActive, setIsActive] = useState(true);
   const [talentId, setTalentId] = useState(null);
   const [prefs, setPrefs] = useState({
@@ -23,7 +24,7 @@ export default function SettingsScreen({navigation}) {
   useEffect(() => {
     const loadModeAndData = async () => {
       const mode = await AsyncStorage.getItem('profile_mode');
-      setIsActive(mode !== 'passive'); // default to active
+      setIsActive(mode !== 'passive');
       const talentStr = await AsyncStorage.getItem('talent');
       const talent = JSON.parse(talentStr || '{}');
       if (talent?.talent_id) {
@@ -35,67 +36,81 @@ export default function SettingsScreen({navigation}) {
   }, []);
 
   const loadPreferences = async (talent_id) => {
-    const response = await fetch(`${baseUrl}/get-passive-preferences`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ talent_id }),
-    });
-    const result = await response.json();
-    if (result?.data) {
-      const d = result.data;
-      setPrefs({
-        salary_min: d.salary_min?.toString() || '',
-        salary_max: d.salary_max?.toString() || '',
-        dream_companies: (d.dream_companies || []).join(', '),
-        match_threshold: d.match_threshold?.toString() || '80',
-        remote_preference: d.remote_preference,
-        preferred_industries: (d.preferred_industries || []).join(', '),
-        preferred_roles: (d.preferred_roles || []).join(', '),
+    try {
+      const response = await fetch(`${baseUrl}/get-passive-preferences`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ talent_id }),
       });
+      const result = await response.json();
+      if (result?.data) {
+        const d = result.data;
+        setPrefs({
+          salary_min: d.salary_min?.toString() || '',
+          salary_max: d.salary_max?.toString() || '',
+          dream_companies: (d.dream_companies || []).join(', '),
+          match_threshold: d.match_threshold?.toString() || '80',
+          remote_preference: d.remote_preference,
+          preferred_industries: (d.preferred_industries || []).join(', '),
+          preferred_roles: (d.preferred_roles || []).join(', '),
+        });
+      }
+    } catch (e) {
+      console.error('❌ Failed to load passive preferences:', e);
     }
   };
 
-  /*const toggleMode = async (value) => {
-    setIsActive(value);
-    const mode = value ? 'active' : 'passive';
-    await AsyncStorage.setItem('profile_mode', mode);
-    if (!value && talentId) {
-      await loadPreferences(talentId);
-    }
-    navigation.navigate('Home');
-  };
-  */
   const toggleMode = async (value) => {
     const mode = value ? 'active' : 'passive';
     setIsActive(value);
     await AsyncStorage.setItem('profile_mode', mode);
 
-    if (talentId) {
+    if (!talentId) return;
+
+    try {
+      const endpoint = `${serverBaseUrl}/talent-profiles/update-profile-mode`;
+      const payload = { talent_id: talentId, profile_mode: mode };
+      console.log('🌐 Sending profile_mode update to:', endpoint);
+      console.log('📦 Payload:', payload);
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const text = await response.text();
+
       try {
-        await fetch(`${serverBaseUrl}/update-profile-mode`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ talent_id: talentId, profile_mode: mode })
-        });
+        const json = JSON.parse(text);
+
+        if (!response.ok) {
+          console.error('❌ Server returned error:', json);
+          Alert.alert('Failed to update profile mode', json.error || 'Unknown error');
+          return;
+        }
+
+        console.log('✅ Mode update success:', json);
 
         const talentStr = await AsyncStorage.getItem('talent');
         const parsedTalent = JSON.parse(talentStr || '{}');
         parsedTalent.profile_mode = mode;
         await AsyncStorage.setItem('talent', JSON.stringify(parsedTalent));
-      } catch (err) {
-        console.error('❌ Failed to update profile mode in backend:', err);
+      } catch (jsonErr) {
+        console.error('🔥 Failed to parse server response:', text);
+        Alert.alert('Server Error', 'Unexpected server response.');
       }
-
-      if (!value) await loadPreferences(talentId);
+    } catch (err) {
+      console.error('❌ Network or server error while updating profile_mode:', err);
+      Alert.alert('❌ Error', 'Could not update profile mode. Please try again.');
     }
+
+    if (!value) await loadPreferences(talentId);
 
     navigation.navigate('Home');
   };
 
-
-  const handleChange = (key, value) => {
-    setPrefs((prev) => ({ ...prev, [key]: value }));
-  };
+  const handleChange = (key, value) => setPrefs((prev) => ({ ...prev, [key]: value }));
 
   const savePreferences = async () => {
     if (!talentId) {
@@ -114,17 +129,21 @@ export default function SettingsScreen({navigation}) {
       preferred_roles: prefs.preferred_roles.split(',').map((s) => s.trim()),
     };
 
-    const response = await fetch(`${baseUrl}/save-passive-preferences`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
+    try {
+      const res = await fetch(`${baseUrl}/save-passive-preferences`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
 
-    const result = await response.json();
-    if (!response.ok) {
-      Alert.alert('❌ Error', result.error || 'Failed to save preferences.');
-    } else {
-      Alert.alert('✅ Saved', 'Passive preferences updated.');
+      const result = await res.json();
+      if (!res.ok) {
+        Alert.alert('❌ Error', result.error || 'Failed to save preferences.');
+      } else {
+        Alert.alert('✅ Saved', 'Passive preferences updated.');
+      }
+    } catch (err) {
+      console.error('❌ Failed to save preferences:', err);
     }
   };
 
@@ -229,9 +248,5 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  footerIcon: {
-    fontSize: 22,
-    color: '#7D4AEA',
   },
 });
