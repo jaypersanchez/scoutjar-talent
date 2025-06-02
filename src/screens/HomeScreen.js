@@ -1,4 +1,5 @@
-import React, { useEffect, useFocusEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -31,6 +32,7 @@ export default function HomeScreen({ navigation }) {
   const [recruiterInfoMap, setRecruiterInfoMap] = useState({});
   const [mode, setMode] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [profileMode, setProfileMode] = useState(null);
 
   const translateX = new Animated.Value(0);
 
@@ -40,22 +42,33 @@ export default function HomeScreen({ navigation }) {
   useFocusEffect(
     useCallback(() => {
       const fetchAndSetProfileMode = async () => {
-        try {
-          const user_id = await AsyncStorage.getItem("user_id");
-          const response = await fetch(`${API_URL}/get-talent-profile/${user_id}`);
-          const json = await response.json();
-          const latestMode = json.profile_mode || "active";
-          setProfileMode(latestMode);  // state used for matching logic
-          await AsyncStorage.setItem("profile_mode", latestMode);
-        } catch (e) {
-          console.error("🔥 Failed to fetch profile mode", e);
-        }
-      };
+    try {
+      const user_id = await AsyncStorage.getItem("user_id");
+      const response = await fetch(`${baseUrl}/talent-profiles/get-talent-profile/${user_id}`);
+      const json = await response.json();
+
+      const latestMode = json.profile_mode || "active";
+      //setProfileMode(latestMode); // this is used during runtime logic
+      setMode(latestMode); // sets card matching mode
+
+      // Rebuild the talent object with updated profile_mode
+      const talentStr = await AsyncStorage.getItem("talent");
+      const parsedTalent = talentStr ? JSON.parse(talentStr) : {};
+      const updatedTalent = { ...parsedTalent, profile_mode: latestMode };
+
+      await AsyncStorage.setItem("talent", JSON.stringify(updatedTalent));
+      setTalent(updatedTalent);
+    } catch (e) {
+      console.error("🔥 Failed to fetch profile mode", e);
+    }
+  };
+
 
       fetchAndSetProfileMode();
     }, [])
   );
 
+  
 
   useEffect(() => {
     const loadData = async () => {
@@ -75,7 +88,8 @@ export default function HomeScreen({ navigation }) {
           if (profileMode === 'passive') {
             await fetchPassiveMatches(parsedTalent.talent_id);
           } else {
-            await fetchMatchingJobs(parsedTalent.talent_id);
+            //await fetchMatchingJobs(parsedTalent.talent_id);
+            await fetchSemanticJobMatches(parsedTalent.talent_id);
           }
 
           await fetchAppliedJobs(parsedTalent.talent_id);
@@ -90,6 +104,13 @@ export default function HomeScreen({ navigation }) {
 
     loadData();
   }, []);
+
+  useEffect(() => {
+  if (jobs.length > 0) {
+    setCurrentIndex(0);
+  }
+}, [jobs]);
+
 
   const handleSwipe = (direction) => {
     if (direction === 'left' && currentIndex < jobs.length - 1) {
@@ -122,6 +143,23 @@ export default function HomeScreen({ navigation }) {
       console.error("❌ Failed to load jobs:", err);
     }
   };
+
+  const fetchSemanticJobMatches = async (talent_id) => {
+  try {
+    const response = await fetch(`${AIbaseUrl}/search-jobs-semantic`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ talent_id }),
+    });
+    const result = await response.json();
+    console.log("🧠 Received semantic job matches:", result);
+    setJobs(result.matches || []);
+    console.log("🧠 Set jobs in state:", result.matches || []);
+  } catch (err) {
+    console.error("❌ Semantic match failed:", err);
+  }
+};
+
 
   const fetchAppliedJobs = async (talent_id) => {
     try {
@@ -183,17 +221,23 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
-  const job = jobs[currentIndex];
+  //const job = jobs[currentIndex];
+  const job = jobs[currentIndex] || {};
 
   const animateSwipe = (direction, onComplete) => {
-    const toValue = direction === 'left' ? -500 : 500;
-    Animated.timing(translateX, {
-      toValue,
-      duration: 250,
-      easing: Easing.out(Easing.ease),
-      useNativeDriver: true,
-    }).start(() => onComplete(job));
-  };
+  const toValue = direction === 'left' ? -500 : 500;
+  Animated.timing(translateX, {
+    toValue,
+    duration: 300,
+    useNativeDriver: true,
+  }).start(() => {
+    const job = jobs[currentIndex];
+    onComplete(job);
+    translateX.setValue(0); // ✅ Reset card position after swipe
+  });
+};
+
+
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -214,36 +258,54 @@ export default function HomeScreen({ navigation }) {
           onSwipeRight={() => animateSwipe('right', handleApply)}
           config={{ velocityThreshold: 0.3, directionalOffsetThreshold: 80 }}
         >
-          <Animated.View style={[styles.fullscreenCard, { transform: [{ translateX }] }]}>
-            <Text style={styles.jobTitle}>{job.job_title || job.title}</Text>
-            <Text style={styles.jobDesc}>{job.job_description || job.description}</Text>
-            {(job.required_skills || job.skills_required)?.length > 0 && (
-              <Text style={styles.skills}>
-                Skills: {(job.required_skills || job.skills_required).join(', ')}
-              </Text>
-            )}
-            <Text style={styles.matchScore}>Match Score: {Math.round(job.match_score)}%</Text>
-            <Text style={styles.applicantCount}>Applicants: {applicantCounts[job.job_id] || 0}</Text>
-          </Animated.View>
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+  <Animated.View style={[styles.fullscreenCard, { transform: [{ translateX }] }]}>
+    <Text style={styles.jobTitle}>{job.job_title || job.title}</Text>
+    <Text style={styles.jobDesc}>{job.job_description || job.description}</Text>
+    {(job.required_skills || job.skills_required)?.length > 0 && (
+      <Text style={styles.skills}>
+        Skills: {(job.required_skills || job.skills_required).join(', ')}
+      </Text>
+    )}
+    <Text style={styles.matchScore}>
+      Match Score: {Math.round(job.match_score || 0)}%
+    </Text>
+    <Text style={styles.applicantCount}>
+      Applicants: {applicantCounts[job.job_id] || 0}
+    </Text>
+  </Animated.View>
+</View>
+
         </GestureRecognizer>
       )}
 
       {/* Footer ALWAYS visible */}
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('Profile')}>
-          <Image source={profileIcon} style={styles.footerImage} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('AppliedJobs')}>
-          <Image source={appliedIcon} style={styles.footerImage} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('Settings')}>
-          <Image source={settingsIcon} style={styles.footerImage} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.footerIconButton} onPress={handleSignOut}>
-          <Image source={exitIcon} style={styles.footerImage} />
-        </TouchableOpacity>
-        <Text style={{ color: '#00C853', fontWeight: 'bold', fontSize: 16, marginTop: 14 }}>🚀 Active</Text>
-      </View>
+  <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('Profile')}>
+    <Image source={profileIcon} style={styles.footerImage} />
+  </TouchableOpacity>
+  <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('AppliedJobs')}>
+    <Image source={appliedIcon} style={styles.footerImage} />
+  </TouchableOpacity>
+  <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('Settings')}>
+    <Image source={settingsIcon} style={styles.footerImage} />
+  </TouchableOpacity>
+  <TouchableOpacity style={styles.footerIconButton} onPress={handleSignOut}>
+    <Image source={exitIcon} style={styles.footerImage} />
+  </TouchableOpacity>
+
+  <View style={{ alignItems: 'center', marginTop: 6 }}>
+    <Text style={{ color: mode === 'active' ? '#30a14e' : '#6b7280', fontWeight: 'bold', fontSize: 16 }}>
+      {mode === 'active' ? '🚀 Active' : '😌 Passive'}
+    </Text>
+    {/*<TouchableOpacity onPress={toggleProfileMode}>
+      <Text style={{ fontSize: 12, color: '#007aff', marginTop: 2 }}>
+        Switch to {mode === 'active' ? 'Passive' : 'Active'} Mode
+      </Text>
+    </TouchableOpacity>*/}
+  </View>
+</View>
+
     </View>
   );
 }
@@ -256,13 +318,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff'
   },
   fullscreenCard: {
-    flex: 1,
-    padding: 20,
-    justifyContent: 'center',
-    backgroundColor: '#f5f5ff',
-    margin: 10,
-    borderRadius: 12,
-  },
+  backgroundColor: '#fff',
+  borderRadius: 16,
+  padding: 24,
+  margin: 16,
+  elevation: 6,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.1,
+  shadowRadius: 8,
+  height: '85%',
+  width: '90%',
+  justifyContent: 'space-between',
+}
+
+,
   jobTitle: {
     fontSize: 22,
     fontWeight: 'bold',
