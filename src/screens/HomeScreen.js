@@ -239,7 +239,7 @@ return (
       >
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 80, paddingBottom: 40 }}>
+  <View style={{ flex: 1, justifyContent: 'flex-start', alignItems: 'center', paddingTop: 100, paddingBottom: 100 }}>
   <Animated.View style={[styles.fullscreenCard, { transform: [{ translateX }] }]}>
     <Text style={styles.jobTitle}>
       {job?.job_title || 'Untitled Job'}
@@ -258,6 +258,7 @@ return (
     </Text>
   </Animated.View>
 </View>
+
 
   
 </View>
@@ -287,11 +288,11 @@ return (
   </View>
 </View>
 
-<View style={{ alignItems: 'center', marginTop: 6 }}>
+{/*<View style={{ alignItems: 'center', marginTop: 6 }}>
   <Text style={{ color: mode === 'active' ? '#30a14e' : '#6b7280', fontWeight: 'bold', fontSize: 16 }}>
     {mode === 'active' ? '🚀 Active' : '😌 Passive'}
   </Text>
-</View>
+</View>*/}
 
   </View>
 );
