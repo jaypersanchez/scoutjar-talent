@@ -9,7 +9,8 @@ import {
   StyleSheet,
   Image,
   Animated,
-  Easing
+  Easing,
+  ScrollView
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import GestureRecognizer from 'react-native-swipe-gestures';
@@ -40,38 +41,10 @@ export default function HomeScreen({ navigation }) {
   const AIbaseUrl = `${EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL}`;
 
   useFocusEffect(
-    useCallback(() => {
-      const fetchAndSetProfileMode = async () => {
-    try {
-      const user_id = await AsyncStorage.getItem("user_id");
-      const response = await fetch(`${baseUrl}/talent-profiles/get-talent-profile/${user_id}`);
-      const json = await response.json();
+  useCallback(() => {
+    console.log("🌍 AIbaseUrl:", AIbaseUrl);
 
-      const latestMode = json.profile_mode || "active";
-      //setProfileMode(latestMode); // this is used during runtime logic
-      setMode(latestMode); // sets card matching mode
-
-      // Rebuild the talent object with updated profile_mode
-      const talentStr = await AsyncStorage.getItem("talent");
-      const parsedTalent = talentStr ? JSON.parse(talentStr) : {};
-      const updatedTalent = { ...parsedTalent, profile_mode: latestMode };
-
-      await AsyncStorage.setItem("talent", JSON.stringify(updatedTalent));
-      setTalent(updatedTalent);
-    } catch (e) {
-      console.error("🔥 Failed to fetch profile mode", e);
-    }
-  };
-
-
-      fetchAndSetProfileMode();
-    }, [])
-  );
-
-  
-
-  useEffect(() => {
-    const loadData = async () => {
+    const refreshOnFocus = async () => {
       try {
         const userStr = await AsyncStorage.getItem('user');
         const talentStr = await AsyncStorage.getItem('talent');
@@ -80,36 +53,37 @@ export default function HomeScreen({ navigation }) {
 
         if (talentStr) {
           const parsedTalent = JSON.parse(talentStr);
+          const latestMode = parsedTalent.profile_mode || 'active';
           setTalent(parsedTalent);
+          setMode(latestMode);
 
-          const profileMode = parsedTalent.profile_mode || 'active';
-          setMode(profileMode);
-
-          if (profileMode === 'passive') {
+          if (latestMode === 'passive') {
             await fetchPassiveMatches(parsedTalent.talent_id);
           } else {
-            //await fetchMatchingJobs(parsedTalent.talent_id);
             await fetchSemanticJobMatches(parsedTalent.talent_id);
           }
 
           await fetchAppliedJobs(parsedTalent.talent_id);
           await fetchApplicantCounts();
         }
-      } catch (err) {
-        console.error("❌ Error loading session data:", err);
+      } catch (e) {
+        console.error('🔥 Failed to refresh HomeScreen on focus:', e);
       } finally {
-        setLoading(false);
+        setLoading(false); // ✅ move here
       }
     };
 
-    loadData();
-  }, []);
+    refreshOnFocus();
+  }, [])
+);
+
 
   useEffect(() => {
-  if (jobs.length > 0) {
+  if (jobs.length > 0 && currentIndex >= jobs.length) {
     setCurrentIndex(0);
   }
 }, [jobs]);
+
 
 
   const handleSwipe = (direction) => {
@@ -146,19 +120,26 @@ export default function HomeScreen({ navigation }) {
 
   const fetchSemanticJobMatches = async (talent_id) => {
   try {
-    const response = await fetch(`${AIbaseUrl}/search-jobs-semantic`, {
+    const cleanedUrl = `${AIbaseUrl}`.replace(/\/$/, ''); // Removes trailing slash
+    const response = await fetch(`${cleanedUrl}/search-jobs-semantic`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ talent_id }),
     });
+
+    if (!response.ok) {
+      console.error(`❌ Server responded with status ${response.status}`);
+      return;
+    }
+
     const result = await response.json();
-    console.log("🧠 Received semantic job matches:", result);
-    setJobs(result.matches || []);
     console.log("🧠 Set jobs in state:", result.matches || []);
+    setJobs(result.matches || []);
   } catch (err) {
-    console.error("❌ Semantic match failed:", err);
+    console.error("❌ fetchSemanticJobMatches network error:", err.message);
   }
 };
+
 
 
   const fetchAppliedJobs = async (talent_id) => {
@@ -221,9 +202,6 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
-  //const job = jobs[currentIndex];
-  const job = jobs[currentIndex] || {};
-
   const animateSwipe = (direction, onComplete) => {
   const toValue = direction === 'left' ? -500 : 500;
   Animated.timing(translateX, {
@@ -231,56 +209,64 @@ export default function HomeScreen({ navigation }) {
     duration: 300,
     useNativeDriver: true,
   }).start(() => {
-    const job = jobs[currentIndex];
+    //const job = jobs[currentIndex];
     onComplete(job);
     translateX.setValue(0); // ✅ Reset card position after swipe
   });
 };
 
+    // 👇 Put this just before your return
+    const job = jobs[currentIndex] || null;
 
-
-  return (
-    <View style={{ flex: 1, backgroundColor: '#fff' }}>
-      {loading ? (
-        <View style={styles.container}>
-          <ActivityIndicator size="large" color="#7D4AEA" />
-          <Text style={{ color: '#000', marginTop: 12 }}>Loading Jobs...</Text>
-        </View>
-      ) : jobs.length === 0 ? (
-        <View style={styles.container}>
-          <Text style={{ color: '#666', fontSize: 16, textAlign: 'center' }}>
-            No matching jobs found.
-          </Text>
-        </View>
-      ) : (
-        <GestureRecognizer
-          onSwipeLeft={() => animateSwipe('left', handleReject)}
-          onSwipeRight={() => animateSwipe('right', handleApply)}
-          config={{ velocityThreshold: 0.3, directionalOffsetThreshold: 80 }}
-        >
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+return (
+  <View style={{ flex: 1, backgroundColor: '#fff' }}>
+    {loading ? (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#7D4AEA" />
+        <Text style={{ color: '#000', marginTop: 12 }}>Loading Jobs...</Text>
+      </View>
+    ) : jobs.length === 0 ? (
+      <View style={styles.container}>
+        <Text style={{ color: '#666', fontSize: 16, textAlign: 'center' }}>
+          No matching jobs found.
+        </Text>
+      </View>
+    ) : (
+      <GestureRecognizer
+        onSwipeLeft={() => animateSwipe('left', handleReject)}
+        onSwipeRight={() => animateSwipe('right', handleApply)}
+        config={{ velocityThreshold: 0.3, directionalOffsetThreshold: 80 }}
+      >
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          
+  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 80, paddingBottom: 40 }}>
   <Animated.View style={[styles.fullscreenCard, { transform: [{ translateX }] }]}>
-    <Text style={styles.jobTitle}>{job.job_title || job.title}</Text>
-    <Text style={styles.jobDesc}>{job.job_description || job.description}</Text>
-    {(job.required_skills || job.skills_required)?.length > 0 && (
-      <Text style={styles.skills}>
-        Skills: {(job.required_skills || job.skills_required).join(', ')}
-      </Text>
-    )}
+    <Text style={styles.jobTitle}>
+      {job?.job_title || 'Untitled Job'}
+    </Text>
+    <Text style={styles.jobDesc}>
+      {job?.job_description || 'No description provided.'}
+    </Text>
+    <Text style={styles.skills}>
+      Skills: {(job?.required_skills || []).filter(Boolean).join(', ') || 'N/A'}
+    </Text>
     <Text style={styles.matchScore}>
-      Match Score: {Math.round(job.match_score || 0)}%
+      Match Score: {Math.round(job?.match_score || 0)}%
     </Text>
     <Text style={styles.applicantCount}>
-      Applicants: {applicantCounts[job.job_id] || 0}
+      Applicants: {applicantCounts?.[job?.job_id] || 0}
     </Text>
   </Animated.View>
 </View>
 
-        </GestureRecognizer>
-      )}
+  
+</View>
 
-      {/* Footer ALWAYS visible */}
-      <View style={styles.footer}>
+      </GestureRecognizer>
+    )}
+
+    {/* Footer... (unchanged) */}
+    <View style={styles.footer}>
   <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('Profile')}>
     <Image source={profileIcon} style={styles.footerImage} />
   </TouchableOpacity>
@@ -298,16 +284,18 @@ export default function HomeScreen({ navigation }) {
     <Text style={{ color: mode === 'active' ? '#30a14e' : '#6b7280', fontWeight: 'bold', fontSize: 16 }}>
       {mode === 'active' ? '🚀 Active' : '😌 Passive'}
     </Text>
-    {/*<TouchableOpacity onPress={toggleProfileMode}>
-      <Text style={{ fontSize: 12, color: '#007aff', marginTop: 2 }}>
-        Switch to {mode === 'active' ? 'Passive' : 'Active'} Mode
-      </Text>
-    </TouchableOpacity>*/}
   </View>
 </View>
 
-    </View>
-  );
+<View style={{ alignItems: 'center', marginTop: 6 }}>
+  <Text style={{ color: mode === 'active' ? '#30a14e' : '#6b7280', fontWeight: 'bold', fontSize: 16 }}>
+    {mode === 'active' ? '🚀 Active' : '😌 Passive'}
+  </Text>
+</View>
+
+  </View>
+);
+  
 }
 
 const styles = StyleSheet.create({
@@ -317,22 +305,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#ffffff'
   },
+
   fullscreenCard: {
   backgroundColor: '#fff',
+  padding: 20,
   borderRadius: 16,
-  padding: 24,
-  margin: 16,
-  elevation: 6,
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.1,
-  shadowRadius: 8,
-  height: '85%',
+  elevation: 3,
   width: '90%',
-  justifyContent: 'space-between',
-}
+  minHeight: 320,
+  justifyContent: 'center',
+  shadowColor: '#000',
+  shadowOpacity: 0.1,
+  shadowOffset: { width: 0, height: 2 },
+  shadowRadius: 4,
+  marginTop: 60,   // pushes the card down below the header
+  marginBottom: 30 // avoids overlap with the footer
+},
 
-,
   jobTitle: {
     fontSize: 22,
     fontWeight: 'bold',
