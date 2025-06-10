@@ -31,4 +31,5 @@ cd /root/projects/scoutjar/scoutjar-talent || {
 }
 
 echo "🚀 Starting Expo with tunnel mode..."
-npx expo start --tunnel -c
+npx expo start --dev-client --tunnel -c
+# EXPO_NO_DEV_CLIENT=1 npx expo start --tunnel -c

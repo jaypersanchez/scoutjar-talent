@@ -120,8 +120,9 @@ export default function HomeScreen({ navigation }) {
 
   const fetchSemanticJobMatches = async (talent_id) => {
   try {
-    const cleanedUrl = `${AIbaseUrl}`.replace(/\/$/, ''); // Removes trailing slash
-    const response = await fetch(`${cleanedUrl}/search-jobs-semantic`, {
+    //const cleanedUrl = `${AIbaseUrl}`.replace(/\/$/, ''); // Removes trailing slash
+    console.log(`${AIbaseUrl}/search-jobs-semantic`)
+    const response = await fetch(`${AIbaseUrl}/search-jobs-semantic`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ talent_id }),

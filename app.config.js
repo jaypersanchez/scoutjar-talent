@@ -1,6 +1,6 @@
 export default {
   expo: {
-    name: "ScoutJar Talent",
+    name: "LooKK AI",
     slug: "scoutjar-talent",
     version: "1.0.0",
     orientation: "portrait",
@@ -12,14 +12,18 @@ export default {
       backgroundColor: "#ffffff"
     },
     ios: {
-      bundleIdentifier: "com.lookk.ai",   // 👈 MUST add this
+      bundleIdentifier: "virlan.lookk.ai",   
       supportsTablet: true,
+      icon: "./assets/icon_512x512_rounded.png",
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false
       }
     },
     android: {
-      package: "com.lookk.talent",   // ✅ already correct
+      package: "com.lookk.talent", 
+      usesCleartextTraffic: true, 
+      networkSecurityConfig: "./assets/network_security_config.xml",
+      icon: "./assets/icon_512x512_rounded.png",
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
         backgroundColor: "#ffffff"
@@ -38,6 +42,7 @@ export default {
       eas: {
         projectId: "59825ed7-033d-45f8-a06a-eb2aca8f5200"
       }
-    }
+    },
+    plugins: ["expo-font"]
   }
 };

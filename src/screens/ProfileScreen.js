@@ -61,9 +61,14 @@ export default function ProfileScreen({ navigation }) {
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Upload failed');
-
-      Alert.alert('✅ Success', 'Resume uploaded and saved!');
+      if (response.ok) {
+        Alert.alert("Success", data.message || "Resume uploaded successfully.");
+        //fetchProfileData();  // ✅ Force re-fetch the updated profile
+      } else {
+        Alert.alert("Upload Failed", data.error || "Something went wrong.");
+      }
+      //if (!response.ok) throw new Error(data.error || 'Upload failed');
+      //Alert.alert('✅ Success', 'Resume uploaded and saved!');
     } catch (err) {
       console.error('❌ Resume upload error:', err);
       Alert.alert('Upload Error', err.message || 'Something went wrong.');
