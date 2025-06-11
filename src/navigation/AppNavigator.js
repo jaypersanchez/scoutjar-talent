@@ -7,6 +7,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import MessageScreen from '../screens/MessageScreen';
 import AppliedJobsScreen from '../screens/AppliedJobsScreen';
 import RecruiterProfile from '../screens/RecruiterProfile';
+import SettingsScreen from '../screens/SettingsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -15,12 +16,13 @@ export default function AppNavigator() {
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Login">
         <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'ScoutJar Talent' }} />
+        <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'LooKK' }} />
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="Messages" component={MessageScreen} />
         <Stack.Screen name="AppliedJobs" component={AppliedJobsScreen} options={{ title: 'My Applications' }} />
         <Stack.Screen name="RecruiterProfile" component={RecruiterProfile} options={{ title: 'Recruiter Info' }} />
         <Stack.Screen name="MessageScreen" component={MessageScreen} />
+        <Stack.Screen name="Settings" component={SettingsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

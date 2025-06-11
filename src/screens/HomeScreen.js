@@ -1,15 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  ScrollView,
   StyleSheet,
   Image,
   Animated,
-  Easing
+  Easing,
+  ScrollView
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import GestureRecognizer from 'react-native-swipe-gestures';
@@ -17,6 +18,10 @@ import {
   EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL,
   EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL
 } from '@env';
+import appliedIcon from '../../assets/icon-menu/appliedjobs.png';
+import exitIcon from '../../assets/icon-menu/exit.png';
+import profileIcon from '../../assets/icon-menu/profile.png';
+import settingsIcon from '../../assets/icon-menu/settings.png';
 
 export default function HomeScreen({ navigation }) {
   const [jobs, setJobs] = useState([]);
@@ -26,57 +31,84 @@ export default function HomeScreen({ navigation }) {
   const [talent, setTalent] = useState(null);
   const [applicantCounts, setApplicantCounts] = useState({});
   const [recruiterInfoMap, setRecruiterInfoMap] = useState({});
+  const [mode, setMode] = useState(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [profileMode, setProfileMode] = useState(null);
+
+  const translateX = new Animated.Value(0);
 
   const baseUrl = `${EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL}`;
   const AIbaseUrl = `${EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL}`;
 
-  useEffect(() => {
-    const loadData = async () => {
+  useFocusEffect(
+  useCallback(() => {
+    console.log("🌍 AIbaseUrl:", AIbaseUrl);
+
+    const refreshOnFocus = async () => {
       try {
         const userStr = await AsyncStorage.getItem('user');
         const talentStr = await AsyncStorage.getItem('talent');
+
         if (userStr) setUser(JSON.parse(userStr));
+
         if (talentStr) {
           const parsedTalent = JSON.parse(talentStr);
+          const latestMode = parsedTalent.profile_mode || 'active';
           setTalent(parsedTalent);
-          await fetchMatchingJobs(parsedTalent.talent_id);
+          setMode(latestMode);
+
+          if (latestMode === 'passive') {
+            await fetchPassiveMatches(parsedTalent.talent_id);
+          } else {
+            await fetchSemanticJobMatches(parsedTalent.talent_id);
+          }
+
           await fetchAppliedJobs(parsedTalent.talent_id);
           await fetchApplicantCounts();
         }
-      } catch (err) {
-        console.error("❌ Error loading session data:", err);
+      } catch (e) {
+        console.error('🔥 Failed to refresh HomeScreen on focus:', e);
       } finally {
-        setLoading(false);
+        setLoading(false); // ✅ move here
       }
     };
-    loadData();
-  }, []);
+
+    refreshOnFocus();
+  }, [])
+);
+
 
   useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', async () => {
-      try {
-        const talentStr = await AsyncStorage.getItem('talent');
-        if (talentStr) {
-          const parsedTalent = JSON.parse(talentStr);
-          setTalent(parsedTalent);
-          await fetchMatchingJobs(parsedTalent.talent_id);
-          await fetchAppliedJobs(parsedTalent.talent_id);
-          await fetchApplicantCounts();
-        }
-      } catch (err) {
-        console.error("❌ Error refreshing HomeScreen data:", err);
-      }
-    });
-  
-    return unsubscribe;
-  }, [navigation]);
-  
+  if (jobs.length > 0 && currentIndex >= jobs.length) {
+    setCurrentIndex(0);
+  }
+}, [jobs]);
+
+
+
+  const handleSwipe = (direction) => {
+    if (direction === 'left' && currentIndex < jobs.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    } else if (direction === 'right' && currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+    }
+  };
+
+  const fetchPassiveMatches = async (talent_id) => {
+    try {
+      const res = await fetch(`${AIbaseUrl}/passive-matches/${talent_id}`);
+      const data = await res.json();
+      setJobs(data.matches || []);
+    } catch (err) {
+      console.error("❌ Failed to load passive matches:", err);
+    }
+  };
 
   const fetchMatchingJobs = async (talent_id) => {
     try {
       const response = await fetch(`${AIbaseUrl}/match-jobs`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ talent_id }),
       });
       const result = await response.json();
@@ -85,6 +117,30 @@ export default function HomeScreen({ navigation }) {
       console.error("❌ Failed to load jobs:", err);
     }
   };
+
+  const fetchSemanticJobMatches = async (talent_id) => {
+  try {
+    const cleanedUrl = `${AIbaseUrl}`.replace(/\/$/, ''); // Removes trailing slash
+    const response = await fetch(`${cleanedUrl}/search-jobs-semantic`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ talent_id }),
+    });
+
+    if (!response.ok) {
+      console.error(`❌ Server responded with status ${response.status}`);
+      return;
+    }
+
+    const result = await response.json();
+    console.log("🧠 Set jobs in state:", result.matches || []);
+    setJobs(result.matches || []);
+  } catch (err) {
+    console.error("❌ fetchSemanticJobMatches network error:", err.message);
+  }
+};
+
+
 
   const fetchAppliedJobs = async (talent_id) => {
     try {
@@ -107,27 +163,9 @@ export default function HomeScreen({ navigation }) {
       });
       setApplicantCounts(countMap);
     } catch (err) {
-      console.error("❌ Failed to fetch applicant counts:", err.message || err);
+      console.error("❌ Failed to fetch applicant counts:", err);
     }
   };
-
-  const fetchRecruiterInfo = async (job_id) => {
-    if (recruiterInfoMap[job_id]) return;
-    try {
-      const res = await fetch(`${AIbaseUrl}/recruiter-info/${job_id}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to get recruiter info");
-      setRecruiterInfoMap(prev => ({ ...prev, [job_id]: data }));
-    } catch (err) {
-      console.error(`❌ Failed to fetch recruiter info for job ${job_id}:`, err);
-    }
-  };
-
-  useEffect(() => {
-    jobs.forEach(job => {
-      fetchRecruiterInfo(job.job_id);
-    });
-  }, [jobs]);
 
   const handleApply = async (job) => {
     try {
@@ -135,15 +173,11 @@ export default function HomeScreen({ navigation }) {
         talent_id: talent.talent_id,
         job_id: job.job_id,
       };
-      const response = await fetch(`${baseUrl}/job-applicants/apply`, {
+      await fetch(`${baseUrl}/job-applicants/apply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      if (!response.ok) {
-        const result = await response.json();
-        throw new Error(result.error || 'Unknown error');
-      }
       Alert.alert("✅ Applied", `You applied to "${job.job_title || job.title}"`);
       setJobs(prev => prev.filter(j => j.job_id !== job.job_id));
     } catch (error) {
@@ -168,110 +202,100 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
-  const goToProfile = () => {
-    navigation.navigate('Profile');
-  };
+  const animateSwipe = (direction, onComplete) => {
+  const toValue = direction === 'left' ? -500 : 500;
+  Animated.timing(translateX, {
+    toValue,
+    duration: 300,
+    useNativeDriver: true,
+  }).start(() => {
+    //const job = jobs[currentIndex];
+    onComplete(job);
+    translateX.setValue(0); // ✅ Reset card position after swipe
+  });
+};
 
-  if (loading) {
-    return (
-      <View style={[styles.container]}>
+    // 👇 Put this just before your return
+    const job = jobs[currentIndex] || null;
+
+return (
+  <View style={{ flex: 1, backgroundColor: '#fff' }}>
+    {loading ? (
+      <View style={styles.container}>
         <ActivityIndicator size="large" color="#7D4AEA" />
         <Text style={{ color: '#000', marginTop: 12 }}>Loading Jobs...</Text>
       </View>
-    );
-  }
-
-  return (
-    <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 150 }}>
-        <View style={{ alignItems: 'center', marginBottom: 20 }}>
-          <Image
-            source={require('../../assets/lookk.png')}
-            style={{ width: 160, height: 40, resizeMode: 'contain' }}
-          />
-        </View>
-  
-        <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 20, color: '#2727D9' }}>
-          🏡 Welcome {user?.full_name || "LooKK Talent"}!
+    ) : jobs.length === 0 ? (
+      <View style={styles.container}>
+        <Text style={{ color: '#666', fontSize: 16, textAlign: 'center' }}>
+          No matching jobs found.
         </Text>
-  
-        {jobs.length === 0 ? (
-          <Text style={{ color: '#555', textAlign: 'center' }}>No matching jobs found.</Text>
-        ) : (
-          jobs.map((job) => {
-            const translateX = new Animated.Value(0);
-  
-            const animateSwipe = (direction, onComplete) => {
-              const toValue = direction === 'left' ? -500 : 500;
-              Animated.timing(translateX, {
-                toValue,
-                duration: 250,
-                easing: Easing.out(Easing.ease),
-                useNativeDriver: true,
-              }).start(() => onComplete(job));
-            };
-  
-            return (
-              <GestureRecognizer
-                key={job.job_id}
-                onSwipeLeft={() => animateSwipe('left', handleReject)}
-                onSwipeRight={() => animateSwipe('right', handleApply)}
-                config={{ velocityThreshold: 0.3, directionalOffsetThreshold: 80 }}
-              >
-                <Animated.View style={[styles.jobCard, { transform: [{ translateX }] }]}>
-                  <Text style={styles.jobTitle}>{job.job_title || job.title}</Text>
-                  <Text style={styles.jobDesc}>{job.job_description || job.description}</Text>
-                  {(job.required_skills || job.skills_required)?.length > 0 && (
-                    <Text style={styles.skills}>
-                      Skills: {(job.required_skills || job.skills_required).join(', ')}
-                    </Text>
-                  )}
-                  <Text style={styles.matchScore}>Match Score: {Math.round(job.match_score)}%</Text>
-                  <Text style={styles.applicantCount}>
-                    Applicants: {applicantCounts[job.job_id] || 0}
-                  </Text>
-                  {recruiterInfoMap[job.job_id] && (
-                    <View style={styles.recruiterContainer}>
-                      {recruiterInfoMap[job.job_id].profile_image && (
-                        <Image
-                          source={{ uri: recruiterInfoMap[job.job_id].profile_image }}
-                          style={styles.recruiterImage}
-                        />
-                      )}
-                      <View style={{ marginLeft: 10 }}>
-                        <Text style={styles.recruiterText}>
-                          Recruiter: {recruiterInfoMap[job.job_id].full_name}
-                        </Text>
-                        <Text style={styles.recruiterText}>
-                          Company: {recruiterInfoMap[job.job_id].company}
-                        </Text>
-                      </View>
-                    </View>
-                  )}
-                </Animated.View>
-              </GestureRecognizer>
-            );
-          })
-        )}
-      </ScrollView>
-  
-      {/* Fixed Footer with Icons */}
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.footerIconButton} onPress={goToProfile}>
-          <Text style={styles.footerIcon}>📋</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('AppliedJobs')}>
-          <Text style={styles.footerIcon}>🗂️</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('Settings')}>
-          <Text style={styles.footerIcon}>⚙️</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.footerIconButton, { backgroundColor: '#ff4444' }]} onPress={handleSignOut}>
-          <Text style={styles.footerIcon}>🚪</Text>
-        </TouchableOpacity>
       </View>
-    </View>
-  );
+    ) : (
+      <GestureRecognizer
+        onSwipeLeft={() => animateSwipe('left', handleReject)}
+        onSwipeRight={() => animateSwipe('right', handleApply)}
+        config={{ velocityThreshold: 0.3, directionalOffsetThreshold: 80 }}
+      >
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          
+  <View style={{ flex: 1, justifyContent: 'flex-start', alignItems: 'center', paddingTop: 100, paddingBottom: 100 }}>
+  <Animated.View style={[styles.fullscreenCard, { transform: [{ translateX }] }]}>
+    <Text style={styles.jobTitle}>
+      {job?.job_title || 'Untitled Job'}
+    </Text>
+    <Text style={styles.jobDesc}>
+      {job?.job_description || 'No description provided.'}
+    </Text>
+    <Text style={styles.skills}>
+      Skills: {(job?.required_skills || []).filter(Boolean).join(', ') || 'N/A'}
+    </Text>
+    <Text style={styles.matchScore}>
+      Match Score: {Math.round(job?.match_score || 0)}%
+    </Text>
+    <Text style={styles.applicantCount}>
+      Applicants: {applicantCounts?.[job?.job_id] || 0}
+    </Text>
+  </Animated.View>
+</View>
+
+
+  
+</View>
+
+      </GestureRecognizer>
+    )}
+
+    {/* Footer... (unchanged) */}
+    <View style={styles.footer}>
+  <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('Profile')}>
+    <Image source={profileIcon} style={styles.footerImage} />
+  </TouchableOpacity>
+  <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('AppliedJobs')}>
+    <Image source={appliedIcon} style={styles.footerImage} />
+  </TouchableOpacity>
+  <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('Settings')}>
+    <Image source={settingsIcon} style={styles.footerImage} />
+  </TouchableOpacity>
+  <TouchableOpacity style={styles.footerIconButton} onPress={handleSignOut}>
+    <Image source={exitIcon} style={styles.footerImage} />
+  </TouchableOpacity>
+
+  <View style={{ alignItems: 'center', marginTop: 6 }}>
+    <Text style={{ color: mode === 'active' ? '#30a14e' : '#6b7280', fontWeight: 'bold', fontSize: 16 }}>
+      {mode === 'active' ? '🚀 Active' : '😌 Passive'}
+    </Text>
+  </View>
+</View>
+
+{/*<View style={{ alignItems: 'center', marginTop: 6 }}>
+  <Text style={{ color: mode === 'active' ? '#30a14e' : '#6b7280', fontWeight: 'bold', fontSize: 16 }}>
+    {mode === 'active' ? '🚀 Active' : '😌 Passive'}
+  </Text>
+</View>*/}
+
+  </View>
+);
   
 }
 
@@ -282,24 +306,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#ffffff'
   },
-  jobCard: {
-    backgroundColor: '#f5f5ff',
-    borderLeftWidth: 6,
-    borderLeftColor: '#7D4AEA',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 20,
-  },
+
+  fullscreenCard: {
+  backgroundColor: '#fff',
+  padding: 20,
+  borderRadius: 16,
+  elevation: 3,
+  width: '90%',
+  minHeight: 320,
+  justifyContent: 'center',
+  shadowColor: '#000',
+  shadowOpacity: 0.1,
+  shadowOffset: { width: 0, height: 2 },
+  shadowRadius: 4,
+  marginTop: 60,   // pushes the card down below the header
+  marginBottom: 30 // avoids overlap with the footer
+},
+
   jobTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#2727D9',
-    marginBottom: 6,
+    marginBottom: 10,
   },
   jobDesc: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#333',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   skills: {
     fontSize: 13,
@@ -318,20 +351,6 @@ const styles = StyleSheet.create({
     color: '#777',
     marginBottom: 8,
   },
-  recruiterContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  recruiterImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-  },
-  recruiterText: {
-    fontSize: 13,
-    color: '#000',
-  },
   footer: {
     position: 'absolute',
     bottom: 0,
@@ -339,22 +358,23 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: 'row',
     justifyContent: 'space-around',
-    backgroundColor: '#ffffff',
-    paddingVertical: 12,
+    backgroundColor: '#fff',
+    paddingVertical: 10,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderTopColor: '#ddd',
+    elevation: 5,
   },
   footerIconButton: {
-    backgroundColor: '#7D4AEA',
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    backgroundColor: '#f0f0f5',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 6,
   },
-  footerIcon: {
-    fontSize: 22,
-    color: '#ffffff',
+  footerImage: {
+    width: 30,
+    height: 30,
+    resizeMode: 'contain',
   },
 });
