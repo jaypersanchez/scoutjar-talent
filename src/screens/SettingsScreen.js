@@ -1,16 +1,31 @@
-// SettingsScreen.js
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Switch, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  Switch,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL, EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL } from '@env';
+import {
+  EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL,
+  EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL,
+} from '@env';
 import { MaterialIcons } from '@expo/vector-icons';
+
+// import your TermsAndConditions
+import TermsAndConditions from './TermsAndConditions';
 
 export default function SettingsScreen({ navigation }) {
   const baseUrl = EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL;
   const serverBaseUrl = EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL;
 
-  const [isActive, setIsActive] = useState(true);
   const [talentId, setTalentId] = useState(null);
+  const [section, setSection] = useState('passive');
+
   const [prefs, setPrefs] = useState({
     salary_min: '',
     salary_max: '',
@@ -23,13 +38,11 @@ export default function SettingsScreen({ navigation }) {
 
   useEffect(() => {
     const loadModeAndData = async () => {
-      const mode = await AsyncStorage.getItem('profile_mode');
-      setIsActive(mode !== 'passive');
       const talentStr = await AsyncStorage.getItem('talent');
       const talent = JSON.parse(talentStr || '{}');
       if (talent?.talent_id) {
         setTalentId(talent.talent_id);
-        if (mode === 'passive') loadPreferences(talent.talent_id);
+        loadPreferences(talent.talent_id);
       }
     };
     loadModeAndData();
@@ -60,57 +73,8 @@ export default function SettingsScreen({ navigation }) {
     }
   };
 
-  const toggleMode = async (value) => {
-    const mode = value ? 'active' : 'passive';
-    setIsActive(value);
-    await AsyncStorage.setItem('profile_mode', mode);
-
-    if (!talentId) return;
-
-    try {
-      const endpoint = `${serverBaseUrl}/talent-profiles/update-profile-mode`;
-      const payload = { talent_id: talentId, profile_mode: mode };
-      console.log('🌐 Sending profile_mode update to:', endpoint);
-      console.log('📦 Payload:', payload);
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      const text = await response.text();
-
-      try {
-        const json = JSON.parse(text);
-
-        if (!response.ok) {
-          console.error('❌ Server returned error:', json);
-          Alert.alert('Failed to update profile mode', json.error || 'Unknown error');
-          return;
-        }
-
-        console.log('✅ Mode update success:', json);
-
-        const talentStr = await AsyncStorage.getItem('talent');
-        const parsedTalent = JSON.parse(talentStr || '{}');
-        parsedTalent.profile_mode = mode;
-        await AsyncStorage.setItem('talent', JSON.stringify(parsedTalent));
-      } catch (jsonErr) {
-        console.error('🔥 Failed to parse server response:', text);
-        Alert.alert('Server Error', 'Unexpected server response.');
-      }
-    } catch (err) {
-      console.error('❌ Network or server error while updating profile_mode:', err);
-      Alert.alert('❌ Error', 'Could not update profile mode. Please try again.');
-    }
-
-    if (!value) await loadPreferences(talentId);
-
-    navigation.navigate('Home');
-  };
-
-  const handleChange = (key, value) => setPrefs((prev) => ({ ...prev, [key]: value }));
+  const handleChange = (key, value) =>
+    setPrefs((prev) => ({ ...prev, [key]: value }));
 
   const savePreferences = async () => {
     if (!talentId) {
@@ -149,16 +113,58 @@ export default function SettingsScreen({ navigation }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.label}>Profile Mode: {isActive ? 'Active' : 'Passive'}</Text>
-        <Switch
-          value={isActive}
-          onValueChange={toggleMode}
-          thumbColor={isActive ? '#4CAF50' : '#ccc'}
-          trackColor={{ false: '#767577', true: '#81b0ff' }}
-        />
+      {/* Section Switcher */}
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'center',
+          marginVertical: 10,
+          flexWrap: 'wrap',
+        }}
+      >
+        <TouchableOpacity
+          onPress={() => setSection('passive')}
+          style={{
+            marginHorizontal: 10,
+            padding: 6,
+            borderBottomWidth: section === 'passive' ? 2 : 0,
+            borderColor: '#007bff',
+          }}
+        >
+          <Text style={{ color: section === 'passive' ? '#007bff' : '#333' }}>
+            Passive Preferences
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setSection('password')}
+          style={{
+            marginHorizontal: 10,
+            padding: 6,
+            borderBottomWidth: section === 'password' ? 2 : 0,
+            borderColor: '#007bff',
+          }}
+        >
+          <Text style={{ color: section === 'password' ? '#007bff' : '#333' }}>
+            Change Password
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setSection('terms')}
+          style={{
+            marginHorizontal: 10,
+            padding: 6,
+            borderBottomWidth: section === 'terms' ? 2 : 0,
+            borderColor: '#007bff',
+          }}
+        >
+          <Text style={{ color: section === 'terms' ? '#007bff' : '#333' }}>
+            Terms & Conditions
+          </Text>
+        </TouchableOpacity>
+      </View>
 
-        {!isActive && (
+      <ScrollView contentContainerStyle={styles.container}>
+        {section === 'passive' && (
           <>
             {renderInput('Dream Companies (comma separated)', 'dream_companies', prefs, handleChange)}
             {renderInput('Preferred Industries (comma separated)', 'preferred_industries', prefs, handleChange)}
@@ -178,9 +184,43 @@ export default function SettingsScreen({ navigation }) {
             </TouchableOpacity>
           </>
         )}
+
+        {section === 'password' && (
+          <View style={{ marginTop: 20 }}>
+            <Text style={styles.label}>Change Password</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="New Password"
+              secureTextEntry
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Confirm New Password"
+              secureTextEntry
+            />
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={() =>
+                Alert.alert('Coming Soon', 'Password change coming soon!')
+              }
+            >
+              <Text style={styles.saveButtonText}>Update Password</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {section === 'terms' && (
+          <View style={{ width: '90%', marginTop: 20 }}>
+            <TermsAndConditions />
+          </View>
+        )}
       </ScrollView>
+
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('Home')}>
+        <TouchableOpacity
+          style={styles.footerIconButton}
+          onPress={() => navigation.navigate('Home')}
+        >
           <MaterialIcons name="home" size={26} color="#7D4AEA" />
         </TouchableOpacity>
       </View>
@@ -202,10 +242,16 @@ const renderInput = (label, key, state, handleChange, keyboardType = 'default') 
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20, paddingBottom: 100, alignItems: 'center', backgroundColor: '#fff',
+    padding: 20,
+    paddingBottom: 100,
+    alignItems: 'center',
+    backgroundColor: '#fff',
   },
   label: {
-    fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 6,
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 6,
   },
   input: {
     borderColor: '#ccc',
@@ -213,6 +259,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     padding: 10,
     backgroundColor: '#f9f9f9',
+    marginBottom: 10,
   },
   saveButton: {
     marginTop: 20,

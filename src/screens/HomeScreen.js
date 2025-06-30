@@ -53,6 +53,12 @@ export default function HomeScreen({ navigation }) {
 
         if (talentStr) {
           const parsedTalent = JSON.parse(talentStr);
+
+          if (!parsedTalent?.talent_id) {
+            console.warn("⚠️ Talent data missing or corrupted in session");
+            return;
+          }
+
           const latestMode = parsedTalent.profile_mode || 'active';
           setTalent(parsedTalent);
           setMode(latestMode);
@@ -66,6 +72,7 @@ export default function HomeScreen({ navigation }) {
           await fetchAppliedJobs(parsedTalent.talent_id);
           await fetchApplicantCounts();
         }
+
       } catch (e) {
         console.error('🔥 Failed to refresh HomeScreen on focus:', e);
       } finally {
@@ -219,6 +226,45 @@ export default function HomeScreen({ navigation }) {
     // 👇 Put this just before your return
     const job = jobs[currentIndex] || null;
 
+    const handleToggleMode = async () => {
+  const nextMode = mode === 'active' ? 'passive' : 'active';
+  setMode(nextMode);
+  await AsyncStorage.setItem('profile_mode', nextMode);
+
+  // update talent profile mode
+  try {
+    const talentStr = await AsyncStorage.getItem('talent');
+    const talent = JSON.parse(talentStr || '{}');
+    if (!talent?.talent_id) return;
+
+    const payload = { talent_id: talent.talent_id, profile_mode: nextMode };
+    const response = await fetch(`${baseUrl}/talent-profiles/update-profile-mode`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      Alert.alert("⚠️ Couldn't update mode on server");
+    } else {
+      talent.profile_mode = nextMode;
+      await AsyncStorage.setItem('talent', JSON.stringify(talent));
+      Alert.alert(`✅ Switched to ${nextMode} mode`);
+    }
+
+    // optionally reload jobs right away
+    if (nextMode === 'passive') {
+      await fetchPassiveMatches(talent.talent_id);
+    } else {
+      await fetchSemanticJobMatches(talent.talent_id);
+    }
+
+  } catch (err) {
+    console.error("❌ handleToggleMode failed:", err);
+  }
+};
+
+
 return (
   <View style={{ flex: 1, backgroundColor: '#fff' }}>
     {loading ? (
@@ -233,70 +279,123 @@ return (
         </Text>
       </View>
     ) : (
-      <GestureRecognizer
-        onSwipeLeft={() => animateSwipe('left', handleReject)}
-        onSwipeRight={() => animateSwipe('right', handleApply)}
-        config={{ velocityThreshold: 0.3, directionalOffsetThreshold: 80 }}
-      >
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          
-  <View style={{ flex: 1, justifyContent: 'flex-start', alignItems: 'center', paddingTop: 100, paddingBottom: 100 }}>
-  <Animated.View style={[styles.fullscreenCard, { transform: [{ translateX }] }]}>
-    <Text style={styles.jobTitle}>
-      {job?.job_title || 'Untitled Job'}
-    </Text>
-    <Text style={styles.jobDesc}>
-      {job?.job_description || 'No description provided.'}
-    </Text>
-    <Text style={styles.skills}>
-      Skills: {(job?.required_skills || []).filter(Boolean).join(', ') || 'N/A'}
-    </Text>
-    <Text style={styles.matchScore}>
-      Match Score: {Math.round(job?.match_score || 0)}%
-    </Text>
-    <Text style={styles.applicantCount}>
-      Applicants: {applicantCounts?.[job?.job_id] || 0}
-    </Text>
-  </Animated.View>
-</View>
+      <View style={{ flex: 1 }}>
+        {/* passive-mode banner */}
+        {mode === 'passive' && (
+          <View
+            style={{
+              backgroundColor: '#fff3cd',
+              padding: 10,
+              borderColor: '#ffeeba',
+              borderWidth: 1,
+              margin: 10,
+              borderRadius: 8,
+            }}
+          >
+            <Text style={{ color: '#856404', textAlign: 'center' }}>
+              ℹ️ You are in Passive Mode. Please ensure your profile is fully updated for best results.
+            </Text>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Settings')}
+              style={{
+                marginTop: 8,
+                backgroundColor: '#856404',
+                padding: 6,
+                borderRadius: 4,
+                alignSelf: 'center',
+              }}
+            >
+              <Text style={{ color: '#fff' }}>Edit Passive Mode Preferences</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
-
-  
-</View>
-
-      </GestureRecognizer>
+        <GestureRecognizer
+          onSwipeLeft={() => animateSwipe('left', handleReject)}
+          onSwipeRight={() => animateSwipe('right', handleApply)}
+          config={{ velocityThreshold: 0.3, directionalOffsetThreshold: 80 }}
+          style={{ flex: 1 }}
+        >
+          <View
+            style={{
+              flex: 1,
+              justifyContent: 'flex-start',
+              alignItems: 'center',
+              paddingTop: 100,
+              paddingBottom: 100,
+            }}
+          >
+            <Animated.View
+              style={[
+                styles.fullscreenCard,
+                { transform: [{ translateX }] },
+              ]}
+            >
+              <Text style={styles.jobTitle}>
+                {job?.job_title || 'Untitled Job'}
+              </Text>
+              <Text style={styles.jobDesc}>
+                {job?.job_description || 'No description provided.'}
+              </Text>
+              <Text style={styles.skills}>
+                Skills:{' '}
+                {(job?.required_skills || []).filter(Boolean).join(', ') ||
+                  'N/A'}
+              </Text>
+              <Text style={styles.matchScore}>
+                Match Score: {Math.round(job?.match_score || 0)}%
+              </Text>
+              <Text style={styles.applicantCount}>
+                Applicants: {applicantCounts?.[job?.job_id] || 0}
+              </Text>
+            </Animated.View>
+          </View>
+        </GestureRecognizer>
+      </View>
     )}
 
-    {/* Footer... (unchanged) */}
+    {/* Footer */}
     <View style={styles.footer}>
-  <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('Profile')}>
-    <Image source={profileIcon} style={styles.footerImage} />
-  </TouchableOpacity>
-  <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('AppliedJobs')}>
-    <Image source={appliedIcon} style={styles.footerImage} />
-  </TouchableOpacity>
-  <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('Settings')}>
-    <Image source={settingsIcon} style={styles.footerImage} />
-  </TouchableOpacity>
-  <TouchableOpacity style={styles.footerIconButton} onPress={handleSignOut}>
-    <Image source={exitIcon} style={styles.footerImage} />
-  </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.footerIconButton}
+        onPress={() => navigation.navigate('Profile')}
+      >
+        <Image source={profileIcon} style={styles.footerImage} />
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.footerIconButton}
+        onPress={() => navigation.navigate('AppliedJobs')}
+      >
+        <Image source={appliedIcon} style={styles.footerImage} />
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.footerIconButton}
+        onPress={() => navigation.navigate('Settings')}
+      >
+        <Image source={settingsIcon} style={styles.footerImage} />
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.footerIconButton}
+        onPress={handleSignOut}
+      >
+        <Image source={exitIcon} style={styles.footerImage} />
+      </TouchableOpacity>
 
-  <View style={{ alignItems: 'center', marginTop: 6 }}>
-    <Text style={{ color: mode === 'active' ? '#30a14e' : '#6b7280', fontWeight: 'bold', fontSize: 16 }}>
-      {mode === 'active' ? '🚀 Active' : '😌 Passive'}
-    </Text>
-  </View>
-</View>
-
-{/*<View style={{ alignItems: 'center', marginTop: 6 }}>
-  <Text style={{ color: mode === 'active' ? '#30a14e' : '#6b7280', fontWeight: 'bold', fontSize: 16 }}>
-    {mode === 'active' ? '🚀 Active' : '😌 Passive'}
-  </Text>
-</View>*/}
-
+      <TouchableOpacity onPress={handleToggleMode}>
+        <Text
+          style={{
+            color: mode === 'active' ? '#30a14e' : '#6b7280',
+            fontWeight: 'bold',
+            fontSize: 16,
+          }}
+        >
+          {mode === 'active' ? '🚀 Active' : '😌 Passive'}
+        </Text>
+      </TouchableOpacity>
+    </View>
   </View>
 );
+
   
 }
 

@@ -10,6 +10,7 @@
     },
     "preview": {
       "distribution": "internal",
+      "credentialsSource":"local",
       "env": {
         "EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL": "https://lookk.ai/api",
         "EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL": "https://lookk.ai/ai",
