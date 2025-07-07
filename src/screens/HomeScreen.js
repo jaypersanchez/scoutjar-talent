@@ -310,6 +310,20 @@ return (
           </View>
         )}
 
+          <View
+  style={{
+    backgroundColor: "#f0f0f0",
+    padding: 10,
+    borderRadius: 8,
+    marginHorizontal: 10,
+    marginBottom: 4
+  }}
+>
+  <Text style={{ textAlign: "center", color: "#333" }}>
+    Swipe right to apply, left to decline.
+  </Text>
+</View>
+
         <GestureRecognizer
           onSwipeLeft={() => animateSwipe('left', handleReject)}
           onSwipeRight={() => animateSwipe('right', handleApply)}

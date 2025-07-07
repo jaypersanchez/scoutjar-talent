@@ -4,6 +4,7 @@ import {
   Text,
   TextInput,
   ScrollView,
+  Image,
   StyleSheet,
   TouchableOpacity,
   Alert,
@@ -16,6 +17,7 @@ import {
   EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL,
 } from '@env';
 import * as DocumentPicker from 'expo-document-picker';
+import saveIcon from '../../assets/icon-menu/save.png';
 
 export default function ProfileScreen({ navigation }) {
   const [profile, setProfile] = useState({
@@ -65,7 +67,14 @@ export default function ProfileScreen({ navigation }) {
         Alert.alert("Success", data.message || "Resume uploaded successfully.");
         //fetchProfileData();  // ✅ Force re-fetch the updated profile
       } else {
-        Alert.alert("Upload Failed", data.error || "Something went wrong.");
+        Alert.alert(
+            "Upload Completed With Issues",
+            `We couldn’t automatically parse all the details from your resume. 
+        Resumes can vary a lot in layout, and sometimes sections are missed if the formatting is complex. 
+        Your file was still uploaded, but please review and edit your profile manually to make sure your skills and experience are correct.
+
+        Tip: Using a simpler resume layout with clear section headings like 'Skills', 'Experience', or 'Education' usually helps the parser do a better job.`
+          );
       }
       //if (!response.ok) throw new Error(data.error || 'Upload failed');
       //Alert.alert('✅ Success', 'Resume uploaded and saved!');
@@ -221,13 +230,21 @@ export default function ProfileScreen({ navigation }) {
       </ScrollView>
 
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.footerIconButton} onPress={handleSave}>
-          <MaterialIcons name="save" size={26} color="#7D4AEA" />
+        <TouchableOpacity
+          style={styles.footerIconButton}
+          onPress={handleSave}
+        >
+          <Image source={saveIcon} style={styles.footerImage} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.footerIconButton} onPress={() => navigation.navigate('Home')}>
+        <TouchableOpacity
+          style={styles.footerIconButton}
+          onPress={() => navigation.navigate('Home')}
+        >
           <MaterialIcons name="home" size={26} color="#7D4AEA" />
         </TouchableOpacity>
       </View>
+
+
     </View>
   );
 }
