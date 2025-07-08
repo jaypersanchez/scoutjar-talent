@@ -388,12 +388,27 @@ return (
       >
         <Image source={settingsIcon} style={styles.footerImage} />
       </TouchableOpacity>
+
       <TouchableOpacity
         style={styles.footerIconButton}
-        onPress={handleSignOut}
+        onPress={() =>
+          Alert.alert(
+            "Leave App",
+            "Are you sure you want to leave?",
+            [
+              { text: "Cancel", style: "cancel" },
+              {
+                text: "Yes, Leave",
+                onPress: handleSignOut,
+                style: "destructive"
+              }
+            ]
+          )
+        }
       >
         <Image source={exitIcon} style={styles.footerImage} />
       </TouchableOpacity>
+
 
       <TouchableOpacity onPress={handleToggleMode}>
         <Text

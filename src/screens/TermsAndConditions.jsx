@@ -69,7 +69,7 @@ export default function TermsAndConditions() {
         >
           andrew@lookai.com
         </Text>
-        , Ha'Cabayim 19, Ramat Gan, Israel.
+        
       </Text>
     </ScrollView>
   );

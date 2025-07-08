@@ -55,8 +55,7 @@ export default function LoginScreen({ navigation }) {
         source={require('../../assets/lookk.png')}
         style={{ width: 180, height: 50, resizeMode: 'contain', marginBottom: 30 }}
       />
-      <Text style={styles.title}>Welcome Back</Text>
-
+      
       <TextInput
         style={styles.input}
         placeholder="Email"

@@ -33,10 +33,17 @@ export default function ProfileScreen({ navigation }) {
     work_preferences: '',
     employment_type: '',
     availability: '',
+    desired_currency: 'USD',
   });
 
   const baseUrl = `${EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL}`;
   const AIbaseUrl = `${EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL}`;
+  const currencySymbols = {
+    USD: '$',
+    EUR: '€',
+    ILS: '₪'
+  };
+
 
   const handleUploadResume = async () => {
     try {
@@ -99,13 +106,14 @@ export default function ProfileScreen({ navigation }) {
           bio: talent.bio || '',
           resume: '',
           skills: Array.isArray(talent.skills) ? talent.skills.join(', ') : '',
-          experience: talent.experience || '',
+          experience_level: talent.experience_level || '',
           education: talent.education || '',
           desired_salary: talent.desired_salary?.toString() || '',
           location: talent.location || '',
           work_preferences: talent.work_preferences || '',
           employment_type: talent.employment_type || '',
           availability: talent.availability || '',
+          desired_currency: talent.desired_currency || '',
         });
       } catch (err) {
         console.error('❌ Failed to load profile from session:', err);
@@ -123,11 +131,13 @@ export default function ProfileScreen({ navigation }) {
     const requiredFields = {
       bio: profile.bio,
       skills: profile.skills,
+      experience_level: profile.experience_level,
       education: profile.education,
       desired_salary: profile.desired_salary,
       location: profile.location,
       availability: profile.availability,
       employment_type: profile.employment_type,
+      desired_currency: profile.desired_currency,
     };
 
     for (const [key, value] of Object.entries(requiredFields)) {
@@ -144,13 +154,14 @@ export default function ProfileScreen({ navigation }) {
         bio: profile.bio,
         resume: profile.resume,
         skills: profile.skills.split(',').map((s) => s.trim()),
-        experience: profile.experience,
+        experience_level: profile.experience_level,
         education: profile.education,
         work_preferences: profile.work_preferences,
         employment_type: profile.employment_type,
         desired_salary: parseFloat(profile.desired_salary || 0),
         location: profile.location,
         availability: profile.availability,
+        desired_currency: profile.desired_currency,
       };
 
       const response = await fetch(`${baseUrl}/talent-profiles/update-talent-profile`, {
@@ -187,13 +198,27 @@ export default function ProfileScreen({ navigation }) {
 
         {renderField('Skills (comma separated)', 'skills', profile.skills, handleChange, false, 'default', true)}
 
-        <Text style={styles.label}>Experience Level</Text>
+        {/*<Text style={styles.label}>Experience Level</Text>
         <Picker selectedValue={profile.experience} onValueChange={(val) => handleChange('experience', val)} style={styles.picker}>
           <Picker.Item label="Select..." value="" />
           <Picker.Item label="Senior" value="Senior" />
           <Picker.Item label="Intermediate" value="Intermediate" />
           <Picker.Item label="Junior" value="Junior" />
+        </Picker>*/}
+
+        <Text style={styles.label}>Experience Level</Text>
+        <Picker
+          selectedValue={profile.experience_level}
+          onValueChange={(val) => handleChange('experience_level', val)}
+          style={styles.picker}
+        >
+          <Picker.Item label="Select..." value="" />
+          <Picker.Item label="Entry (0 years)" value="Entry" />
+          <Picker.Item label="Junior (1–2 years)" value="Junior" />
+          <Picker.Item label="Intermediate (2–5 years)" value="Intermediate" />
+          <Picker.Item label="Senior (5+ years)" value="Senior" />
         </Picker>
+
 
         {renderField('Education', 'education', profile.education, handleChange, false, 'default', true)}
 
@@ -215,7 +240,33 @@ export default function ProfileScreen({ navigation }) {
           <Picker.Item label="Internship" value="Internship" />
         </Picker>
 
-        {renderField('Desired Salary', 'desired_salary', profile.desired_salary, handleChange, false, 'numeric', true)}
+        {/*renderField('Desired Salary', 'desired_salary', profile.desired_salary, handleChange, false, 'numeric', true)*/}
+        <Text style={styles.label}>
+  Desired Salary <Text style={{ color: 'red' }}>*</Text>
+</Text>
+<View style={{ flexDirection: 'row', alignItems: 'center' }}>
+  <Text style={{ fontSize: 18, marginRight: 8 }}>
+    {currencySymbols[profile.desired_currency] || ''}
+  </Text>
+  <TextInput
+    style={[styles.input, { flex: 1 }]}
+    value={profile.desired_salary}
+    onChangeText={(text) => handleChange('desired_salary', text)}
+    keyboardType="numeric"
+  />
+</View>
+
+        <Text style={styles.label}>Currency</Text>
+        <Picker
+          selectedValue={profile.desired_currency}
+          onValueChange={(val) => handleChange('desired_currency', val)}
+          style={styles.picker}
+        >
+          <Picker.Item label="USD – U.S. Dollar" value="USD" />
+          <Picker.Item label="EUR – Euro" value="EUR" />
+          <Picker.Item label="ILS – Israeli Shekel" value="ILS" />
+        </Picker>
+
         {renderField('Location', 'location', profile.location, handleChange, false, 'default', true)}
 
         <Text style={styles.label}>Availability <Text style={{ color: 'red' }}>*</Text></Text>
