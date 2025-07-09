@@ -36,12 +36,16 @@ export default function ProfileScreen({ navigation }) {
     desired_currency: 'USD',
   });
 
+  const [locations, setLocations] = useState([]);
   const baseUrl = `${EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL}`;
   const AIbaseUrl = `${EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL}`;
   const currencySymbols = {
     USD: '$',
     EUR: '€',
-    ILS: '₪'
+    ILS: '₪',
+    GBP: '£',
+    AUD: 'A$',
+    CAD: 'C$' // Canadian Dollar (Loonie)
   };
 
 
@@ -114,6 +118,7 @@ export default function ProfileScreen({ navigation }) {
           employment_type: talent.employment_type || '',
           availability: talent.availability || '',
           desired_currency: talent.desired_currency || '',
+        
         });
       } catch (err) {
         console.error('❌ Failed to load profile from session:', err);
@@ -242,19 +247,19 @@ export default function ProfileScreen({ navigation }) {
 
         {/*renderField('Desired Salary', 'desired_salary', profile.desired_salary, handleChange, false, 'numeric', true)*/}
         <Text style={styles.label}>
-  Desired Salary <Text style={{ color: 'red' }}>*</Text>
-</Text>
-<View style={{ flexDirection: 'row', alignItems: 'center' }}>
-  <Text style={{ fontSize: 18, marginRight: 8 }}>
-    {currencySymbols[profile.desired_currency] || ''}
-  </Text>
-  <TextInput
-    style={[styles.input, { flex: 1 }]}
-    value={profile.desired_salary}
-    onChangeText={(text) => handleChange('desired_salary', text)}
-    keyboardType="numeric"
-  />
-</View>
+          Desired Salary <Text style={{ color: 'red' }}>*</Text>
+        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={{ fontSize: 18, marginRight: 8 }}>
+            {currencySymbols[profile.desired_currency] || ''}
+          </Text>
+          <TextInput
+            style={[styles.input, { flex: 1 }]}
+            value={profile.desired_salary}
+            onChangeText={(text) => handleChange('desired_salary', text)}
+            keyboardType="numeric"
+          />
+        </View>
 
         <Text style={styles.label}>Currency</Text>
         <Picker
@@ -265,6 +270,9 @@ export default function ProfileScreen({ navigation }) {
           <Picker.Item label="USD – U.S. Dollar" value="USD" />
           <Picker.Item label="EUR – Euro" value="EUR" />
           <Picker.Item label="ILS – Israeli Shekel" value="ILS" />
+          <Picker.Item label="GBP – British Pound" value="GBP" />
+          <Picker.Item label="AUD – Australian Dollar" value="AUD" />
+          <Picker.Item label="CAD – Canadian Dollar" value="CAD" />
         </Picker>
 
         {renderField('Location', 'location', profile.location, handleChange, false, 'default', true)}
