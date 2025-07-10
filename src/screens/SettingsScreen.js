@@ -199,9 +199,7 @@ export default function SettingsScreen({ navigation }) {
                 />
               </View>
             </View>
-            <Text style={styles.label}>Preferred Currency</Text>
-            
-            <Picker
+            {/*<Picker
               selectedValue={prefs.preferred_currency}
               onValueChange={(val) => handleChange('preferred_currency', val)}
               
@@ -213,7 +211,53 @@ export default function SettingsScreen({ navigation }) {
               <Picker.Item label="GBP British Pound" value="GBP" />
               <Picker.Item label="AUD Australian Dollar" value="AUD" />
               <Picker.Item label="CAD Canadian Dollar" value="CAD" />
-            </Picker>
+            </Picker>*/}
+            <Text style={styles.label}>Preferred Currency</Text>
+<View style={{ width: '100%', marginBottom: 12 }}>
+  {Object.entries(currencySymbols).map(([code, symbol]) => (
+    <TouchableOpacity
+      key={code}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        backgroundColor: prefs.preferred_currency === code ? '#e6f0ff' : '#fff',
+        borderWidth: 1,
+        borderColor: prefs.preferred_currency === code ? '#007bff' : '#ccc',
+        borderRadius: 8,
+        marginVertical: 4,
+      }}
+      onPress={() => handleChange('preferred_currency', code)}
+    >
+      <View
+        style={{
+          height: 20,
+          width: 20,
+          borderRadius: 10,
+          borderWidth: 2,
+          borderColor: '#007bff',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginRight: 12,
+        }}
+      >
+        {prefs.preferred_currency === code && (
+          <View
+            style={{
+              height: 10,
+              width: 10,
+              borderRadius: 5,
+              backgroundColor: '#007bff',
+            }}
+          />
+        )}
+      </View>
+      <Text style={{ color: '#333' }}>{code} – {symbol}</Text>
+    </TouchableOpacity>
+  ))}
+</View>
+
             {renderInput('Match Threshold (%)', 'match_threshold', prefs, handleChange, 'numeric')}
 
             <Text style={styles.label}>Open to Remote Work?</Text>
