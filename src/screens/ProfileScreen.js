@@ -242,6 +242,7 @@ export default function ProfileScreen({ navigation }) {
           <Picker.Item label="Part-time" value="Part-time" />
           <Picker.Item label="Contract" value="Contract" />
           <Picker.Item label="Freelancer" value="Freelancer" />
+          <Picker.Item label="Hourly" value="Hourly" />
           <Picker.Item label="Internship" value="Internship" />
         </Picker>
 

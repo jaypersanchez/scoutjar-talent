@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL,
@@ -34,7 +35,19 @@ export default function SettingsScreen({ navigation }) {
     remote_preference: true,
     preferred_industries: '',
     preferred_roles: '',
+    preferred_currency: 'USD',
   });
+
+  const currencySymbols = {
+    USD: '$',
+    EUR: '€',
+    ILS: '₪',
+    GBP: '£',
+    AUD: 'A$',
+    CAD: 'C$' // Canadian Dollar (Loonie)
+  };
+
+ console.log('📦 Currency:', prefs.preferred_currency);
 
   useEffect(() => {
     const loadModeAndData = async () => {
@@ -66,6 +79,7 @@ export default function SettingsScreen({ navigation }) {
           remote_preference: d.remote_preference,
           preferred_industries: (d.preferred_industries || []).join(', '),
           preferred_roles: (d.preferred_roles || []).join(', '),
+          preferred_currency: d.preferred_currency || 'USD',
         });
       }
     } catch (e) {
@@ -91,6 +105,7 @@ export default function SettingsScreen({ navigation }) {
       remote_preference: prefs.remote_preference,
       preferred_industries: prefs.preferred_industries.split(',').map((s) => s.trim()),
       preferred_roles: prefs.preferred_roles.split(',').map((s) => s.trim()),
+      preferred_currency: prefs.preferred_currency || 'USD'
     };
 
     try {
@@ -169,7 +184,36 @@ export default function SettingsScreen({ navigation }) {
             {renderInput('Dream Companies (comma separated)', 'dream_companies', prefs, handleChange)}
             {renderInput('Preferred Industries (comma separated)', 'preferred_industries', prefs, handleChange)}
             {renderInput('Preferred Roles (comma separated)', 'preferred_roles', prefs, handleChange)}
-            {renderInput('Min Salary', 'salary_min', prefs, handleChange, 'numeric')}
+            {/*renderInput('Min Salary', 'salary_min', prefs, handleChange, 'numeric')*/}
+            <View style={{ marginTop: 14, width: '90%' }}>
+              <Text style={styles.label}>Min Salary</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={{ fontSize: 18, marginRight: 6 }}>
+                  {currencySymbols[prefs.preferred_currency] || ''}
+                </Text>
+                <TextInput
+                  style={[styles.input, { flex: 1 }]}
+                  value={prefs.salary_min}
+                  onChangeText={(text) => handleChange('salary_min', text)}
+                  keyboardType="numeric"
+                />
+              </View>
+            </View>
+            <Text style={styles.label}>Preferred Currency</Text>
+            
+            <Picker
+              selectedValue={prefs.preferred_currency}
+              onValueChange={(val) => handleChange('preferred_currency', val)}
+              
+            >
+              <Picker.Item label="Select a currency..." value="USD" />
+              <Picker.Item label="USD U.S. Dollar" value="USD" />
+              <Picker.Item label="EUR Euro" value="EUR" />
+              <Picker.Item label="ILS Euro" value="ILS" />
+              <Picker.Item label="GBP British Pound" value="GBP" />
+              <Picker.Item label="AUD Australian Dollar" value="AUD" />
+              <Picker.Item label="CAD Canadian Dollar" value="CAD" />
+            </Picker>
             {renderInput('Match Threshold (%)', 'match_threshold', prefs, handleChange, 'numeric')}
 
             <Text style={styles.label}>Open to Remote Work?</Text>
@@ -296,4 +340,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  picker: {
+    marginTop: 6,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+  },
+
 });

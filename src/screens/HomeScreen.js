@@ -61,6 +61,13 @@ export default function HomeScreen({ navigation }) {
 
           const latestMode = parsedTalent.profile_mode || 'active';
           setTalent(parsedTalent);
+          const isIncompleteProfile = !parsedTalent.bio || !parsedTalent.skills || parsedTalent.skills.length === 0;
+          if (isIncompleteProfile) {
+            Alert.alert("📝 Complete Your Profile", "Please complete your profile before viewing job matches.");
+            navigation.replace('Profile');
+            return;
+          }
+
           setMode(latestMode);
 
           if (latestMode === 'passive') {
