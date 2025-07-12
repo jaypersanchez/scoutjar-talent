@@ -42,6 +42,15 @@ export default function LoginScreen({ navigation }) {
       await AsyncStorage.setItem('user', JSON.stringify(data.user));
       await AsyncStorage.setItem('talent', JSON.stringify(data.talent));
 
+      // 🔄 Immediately fetch fresh talent profile
+      /*try {
+        const fresh = await fetch(`${baseUrl}/talent-profiles/get-talent-profile/${data.talent.talent_id}`);
+        const updatedTalent = await fresh.json();
+        await AsyncStorage.setItem('talent', JSON.stringify(updatedTalent));
+      } catch (err) {
+        console.warn("Could not refresh talent after login:", err);
+      }*/
+
       navigation.replace("Home", { user: data.user, talent: data.talent });
     } catch (err) {
       console.error("❌ Login error:", err);

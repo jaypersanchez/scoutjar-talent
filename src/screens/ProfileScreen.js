@@ -39,6 +39,8 @@ export default function ProfileScreen({ navigation }) {
   });
 
   const [locations, setLocations] = useState([]);
+  const [locationSearch, setLocationSearch] = useState('');
+
   const baseUrl = `${EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL}`;
   const AIbaseUrl = `${EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL}`;
   const currencySymbols = {
@@ -96,6 +98,21 @@ export default function ProfileScreen({ navigation }) {
       Alert.alert('Upload Error', err.message || 'Something went wrong.');
     }
   };
+
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const response = await fetch(`${baseUrl}/locations/all`);
+        const data = await response.json();
+        setLocations(data); // full list to filter
+      } catch (err) {
+        console.error("Failed to fetch locations:", err);
+      }
+    };
+
+    fetchLocations();
+  }, []);
+
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -187,9 +204,15 @@ export default function ProfileScreen({ navigation }) {
       });
 
       const result = await response.json();
+      await AsyncStorage.setItem('talent', JSON.stringify(result));
+
       if (!response.ok) throw new Error(result.error || 'Failed to save profile');
 
-      await AsyncStorage.setItem('talent', JSON.stringify(result));
+      //await AsyncStorage.setItem('talent', JSON.stringify(result));
+      /*const refreshed = await fetch(`${baseUrl}/talent-profiles/get-talent-profile/${profile.talent_id}`);
+      const updatedTalent = await refreshed.json();
+      await AsyncStorage.setItem('talent', JSON.stringify(updatedTalent));*/
+
       Alert.alert('✅ Success', 'Profile saved successfully!');
       navigation.navigate('Home');
     } catch (err) {
@@ -292,8 +315,39 @@ export default function ProfileScreen({ navigation }) {
           <Picker.Item label="CAD – Canadian Dollar" value="CAD" />
         </Picker>
 
-        {renderField('Location', 'location', profile.location, handleChange, false, 'default', true)}
+        {/*renderField('Location', 'location', profile.location, handleChange, false, 'default', true)*/}
+         <Text style={styles.label}>Location <Text style={{ color: 'red' }}>*</Text></Text>
+          <TextInput
+            style={styles.input}
+            value={locationSearch}
+            onChangeText={(text) => {
+              setLocationSearch(text);
+              handleChange('location', text); // keep syncing to profile
+            }}
+            placeholder="Start typing city or country..."
+          />
 
+          {/* Autocomplete suggestions */}
+          {locationSearch.length > 1 && (
+            <View style={{ maxHeight: 200, backgroundColor: '#fff', borderWidth: 1, borderColor: '#ccc', borderRadius: 8 }}>
+              {locations
+                .filter(loc => loc.label.toLowerCase().includes(locationSearch.toLowerCase()))
+                .slice(0, 5)
+                .map((loc, idx) => (
+                  <TouchableOpacity
+                    key={idx}
+                    onPress={() => {
+                      setLocationSearch(loc.value);
+                      handleChange('location', loc.value);
+                    }}
+                    style={{ padding: 10, borderBottomWidth: 1, borderBottomColor: '#eee' }}
+                  >
+                    <Text>{loc.label}</Text>
+                  </TouchableOpacity>
+                ))}
+            </View>
+          )}
+ 
         <Text style={styles.label}>Availability <Text style={{ color: 'red' }}>*</Text></Text>
         <Picker selectedValue={profile.availability} onValueChange={(val) => handleChange('availability', val)} style={styles.picker}>
           <Picker.Item label="Select..." value="" />
