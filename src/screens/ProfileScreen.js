@@ -23,6 +23,8 @@ export default function ProfileScreen({ navigation }) {
   const [profile, setProfile] = useState({
     talent_id: null,
     user_id: null,
+    full_name: '',
+    email: '',
     bio: '',
     resume: '',
     skills: '',
@@ -99,14 +101,21 @@ export default function ProfileScreen({ navigation }) {
     const loadProfile = async () => {
       try {
         const talentStr = await AsyncStorage.getItem('talent');
+        const userStr = await AsyncStorage.getItem('user');
         if (!talentStr) {
           Alert.alert('Error', 'No talent data found in session');
           return;
         }
         const talent = JSON.parse(talentStr);
+        const user = JSON.parse(userStr);
+        console.log('👤 Loaded talent:', talent);
+        console.log('📧 Loaded user:', user);
+
         setProfile({
           talent_id: talent.talent_id,
           user_id: talent.user_id,
+          full_name: user.full_name || '',
+          email: user.email || '',
           bio: talent.bio || '',
           resume: '',
           skills: Array.isArray(talent.skills) ? talent.skills.join(', ') : '',
@@ -156,6 +165,8 @@ export default function ProfileScreen({ navigation }) {
     try {
       const payload = {
         talent_id: profile.talent_id,
+        full_name: profile.full_name,
+        user_id: profile.user_id,
         bio: profile.bio,
         resume: profile.resume,
         skills: profile.skills.split(',').map((s) => s.trim()),
@@ -190,7 +201,12 @@ export default function ProfileScreen({ navigation }) {
   return (
     <View style={{ flex: 1, backgroundColor: '#ffffff' }}>
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 150 }}>
-        <Text style={styles.pageTitle}>📝 Edit Your Profile</Text>
+        <Text style={styles.pageTitle}>📝 Edit Your Profile - {profile.user_id}</Text>
+
+        {renderField('Full Name', 'full_name', profile.full_name, handleChange, false, 'default', true)}
+        <Text style={styles.label}>Email</Text>
+        <Text style={[styles.input, { color: '#555', backgroundColor: '#eee' }]}>{profile.email}</Text>
+
 
         {renderField('Bio', 'bio', profile.bio, handleChange, true, 'default', true)}
 
