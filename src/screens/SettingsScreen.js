@@ -26,6 +26,8 @@ export default function SettingsScreen({ navigation }) {
 
   const [talentId, setTalentId] = useState(null);
   const [section, setSection] = useState('passive');
+  const [roleSuggestions, setRoleSuggestions] = useState([]);
+  const [industrySuggestions, setIndustrySuggestions] = useState([]);
 
   const [prefs, setPrefs] = useState({
     salary_min: '',
@@ -60,6 +62,37 @@ export default function SettingsScreen({ navigation }) {
     };
     loadModeAndData();
   }, []);
+
+  const fetchSuggestions = async (type, query) => {
+  if (!query) {
+    type === 'roles' ? setRoleSuggestions([]) : setIndustrySuggestions([]);
+    return;
+  }
+
+  const url = `${serverBaseUrl}/${type === 'roles' ? 'job-titles' : 'job-titles/job-categories'}?q=${query}`;
+  console.log('🌐 Fetching suggestions from:', url);
+
+  try {
+    const res = await fetch(url);
+    console.log('✅ Response status:', res.status);
+    const text = await res.text(); // Temporarily use text() to inspect raw response
+
+    console.log('📦 Raw response:', text.slice(0, 200)); // Log first 200 chars
+
+    // Try to parse it
+    const json = JSON.parse(text);
+    console.log('🧠 Parsed JSON:', json);
+
+    if (type === 'roles') {
+      setRoleSuggestions(json);
+    } else {
+      setIndustrySuggestions(json);
+    }
+  } catch (e) {
+    console.error('❌ Failed to fetch suggestions:', e.message || e);
+  }
+};
+
 
   const loadPreferences = async (talent_id) => {
     try {
@@ -182,8 +215,59 @@ export default function SettingsScreen({ navigation }) {
         {section === 'passive' && (
           <>
             {renderInput('Dream Companies (comma separated)', 'dream_companies', prefs, handleChange)}
-            {renderInput('Preferred Industries (comma separated)', 'preferred_industries', prefs, handleChange)}
-            {renderInput('Preferred Roles (comma separated)', 'preferred_roles', prefs, handleChange)}
+            {/*renderInput('Preferred Industries (comma separated)', 'preferred_industries', prefs, handleChange)*/}
+            {/*renderInput('Preferred Roles (comma separated)', 'preferred_roles', prefs, handleChange)*/}
+            <View style={{ marginTop: 14, width: '90%' }}>
+  <Text style={styles.label}>Preferred Industries</Text>
+  <TextInput
+    style={styles.input}
+    value={prefs.preferred_industries}
+    onChangeText={(text) => {
+      handleChange('preferred_industries', text);
+      fetchSuggestions('industries', text.split(',').pop().trim());
+    }}
+  />
+  {industrySuggestions.map((suggestion, idx) => (
+    <TouchableOpacity
+      key={idx}
+      onPress={() => {
+        const parts = prefs.preferred_industries.split(',');
+        parts[parts.length - 1] = ` ${suggestion}`;
+        handleChange('preferred_industries', parts.join(',').trim());
+        setIndustrySuggestions([]);
+      }}
+    >
+      <Text style={{ padding: 8, backgroundColor: '#eee' }}>{suggestion}</Text>
+    </TouchableOpacity>
+  ))}
+</View>
+
+<View style={{ marginTop: 14, width: '90%' }}>
+  <Text style={styles.label}>Preferred Roles</Text>
+  <TextInput
+    style={styles.input}
+    value={prefs.preferred_roles}
+    onChangeText={(text) => {
+      handleChange('preferred_roles', text);
+      fetchSuggestions('roles', text.split(',').pop().trim());
+    }}
+  />
+  {roleSuggestions.map((suggestion, idx) => (
+    <TouchableOpacity
+      key={idx}
+      onPress={() => {
+        const parts = prefs.preferred_roles.split(',');
+        parts[parts.length - 1] = ` ${suggestion.job_title}`;
+        handleChange('preferred_roles', parts.join(',').trim());
+        setRoleSuggestions([]);
+      }}
+    >
+      <Text style={{ padding: 8, backgroundColor: '#eee' }}>{suggestion.job_title}</Text>
+    </TouchableOpacity>
+  ))}
+</View>
+
+            
             {/*renderInput('Min Salary', 'salary_min', prefs, handleChange, 'numeric')*/}
             <View style={{ marginTop: 14, width: '90%' }}>
               <Text style={styles.label}>Min Salary</Text>
