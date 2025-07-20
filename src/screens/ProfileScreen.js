@@ -83,13 +83,7 @@ export default function ProfileScreen({ navigation }) {
         //fetchProfileData();  // ✅ Force re-fetch the updated profile
       } else {
         Alert.alert(
-            "Upload Completed With Issues",
-            `We couldn’t automatically parse all the details from your resume. 
-        Resumes can vary a lot in layout, and sometimes sections are missed if the formatting is complex. 
-        Your file was still uploaded, but please review and edit your profile manually to make sure your skills and experience are correct.
-
-        Tip: Using a simpler resume layout with clear section headings like 'Skills', 'Experience', or 'Education' usually helps the parser do a better job.`
-          );
+            "Resume upload Completed.");
       }
       //if (!response.ok) throw new Error(data.error || 'Upload failed');
       //Alert.alert('✅ Success', 'Resume uploaded and saved!');

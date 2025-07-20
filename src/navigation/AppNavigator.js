@@ -23,6 +23,14 @@ import {
   ScrollView
 } from 'react-native';
 
+import ProfileStep1 from '../screens/profilewizard/ProfileStep1';
+import ProfileStep2 from '../screens/profilewizard/ProfileStep2';
+import ProfileStep3 from '../screens/profilewizard/ProfileStep3';
+import ProfileStep4 from '../screens/profilewizard/ProfileStep4';
+import ProfileStep5 from '../screens/profilewizard/ProfileStep5';
+import ProfileStep6 from '../screens/profilewizard/ProfileStep6';
+import ProfileStep7 from '../screens/profilewizard/ProfileStep7';
+
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
@@ -74,6 +82,16 @@ export default function AppNavigator() {
         <Stack.Screen name="RecruiterProfile" component={RecruiterProfile} options={{ title: 'Recruiter Info' }} />
         <Stack.Screen name="MessageScreen" component={MessageScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
+
+        {/* Profile Wizard Steps */}
+        <Stack.Screen name="ProfileStep1" component={ProfileStep1} options={{ headerShown: false }} />
+        <Stack.Screen name="ProfileStep2" component={ProfileStep2} options={{ headerShown: false }} />
+        <Stack.Screen name="ProfileStep3" component={ProfileStep3} options={{ headerShown: false }} />
+        <Stack.Screen name="ProfileStep4" component={ProfileStep4} options={{ headerShown: false }} />
+        <Stack.Screen name="ProfileStep5" component={ProfileStep5} options={{ headerShown: false }} />
+        <Stack.Screen name="ProfileStep6" component={ProfileStep6} options={{ headerShown: false }} />
+        <Stack.Screen name="ProfileStep7" component={ProfileStep7} options={{ headerShown: false }} />
+
       </Stack.Navigator>
     </NavigationContainer>
   );

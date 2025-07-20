@@ -41,6 +41,58 @@ export default function HomeScreen({ navigation }) {
   const AIbaseUrl = `${EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL}`;
 
   useFocusEffect(
+    useCallback(() => {
+      const refreshOnFocus = async () => {
+        try {
+          const userStr = await AsyncStorage.getItem('user');
+          const talentStr = await AsyncStorage.getItem('talent');
+
+          if (userStr) setUser(JSON.parse(userStr));
+
+          if (talentStr) {
+            const parsedTalent = JSON.parse(talentStr);
+
+            if (!parsedTalent?.talent_id) return;
+
+            // 🧠 Redirect if missing minimum match info
+            const isMissingMatchEssentials =
+              !parsedTalent.bio?.trim() ||
+              !Array.isArray(parsedTalent.skills) ||
+              parsedTalent.skills.length === 0 ||
+              !parsedTalent.experience_level?.trim();
+
+
+            if (isMissingMatchEssentials) {
+              navigation.replace('ProfileStep1');
+              return;
+            }
+
+            setTalent(parsedTalent);
+            const latestMode = parsedTalent.profile_mode || 'active';
+            setMode(latestMode);
+
+            if (latestMode === 'passive') {
+              await fetchPassiveMatches(parsedTalent.talent_id);
+            } else {
+              await fetchSemanticJobMatches(parsedTalent.talent_id);
+            }
+
+            await fetchAppliedJobs(parsedTalent.talent_id);
+            await fetchApplicantCounts();
+          }
+        } catch (e) {
+          console.error('🔥 Failed to refresh HomeScreen on focus:', e);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      refreshOnFocus();
+    }, [])
+  );
+
+
+  /*useFocusEffect(
   useCallback(() => {
     console.log("🌍 AIbaseUrl:", AIbaseUrl);
 
@@ -89,7 +141,7 @@ export default function HomeScreen({ navigation }) {
 
     refreshOnFocus();
   }, [])
-);
+);*/
 
 
   useEffect(() => {
