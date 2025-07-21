@@ -41,61 +41,7 @@ export default function HomeScreen({ navigation }) {
   const AIbaseUrl = `${EXPO_PUBLIC_SCOUTJAR_AI_BASE_URL}`;
 
   useFocusEffect(
-    useCallback(() => {
-      const refreshOnFocus = async () => {
-        try {
-          const userStr = await AsyncStorage.getItem('user');
-          const talentStr = await AsyncStorage.getItem('talent');
-
-          if (userStr) setUser(JSON.parse(userStr));
-
-          if (talentStr) {
-            const parsedTalent = JSON.parse(talentStr);
-
-            if (!parsedTalent?.talent_id) return;
-
-            // 🧠 Redirect if missing minimum match info
-            const isMissingMatchEssentials =
-              !parsedTalent.bio?.trim() ||
-              !Array.isArray(parsedTalent.skills) ||
-              parsedTalent.skills.length === 0 ||
-              !parsedTalent.experience_level?.trim();
-
-
-            if (isMissingMatchEssentials) {
-              navigation.replace('ProfileStep1');
-              return;
-            }
-
-            setTalent(parsedTalent);
-            const latestMode = parsedTalent.profile_mode || 'active';
-            setMode(latestMode);
-
-            if (latestMode === 'passive') {
-              await fetchPassiveMatches(parsedTalent.talent_id);
-            } else {
-              await fetchSemanticJobMatches(parsedTalent.talent_id);
-            }
-
-            await fetchAppliedJobs(parsedTalent.talent_id);
-            await fetchApplicantCounts();
-          }
-        } catch (e) {
-          console.error('🔥 Failed to refresh HomeScreen on focus:', e);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      refreshOnFocus();
-    }, [])
-  );
-
-
-  /*useFocusEffect(
   useCallback(() => {
-    console.log("🌍 AIbaseUrl:", AIbaseUrl);
-
     const refreshOnFocus = async () => {
       try {
         const userStr = await AsyncStorage.getItem('user');
@@ -105,50 +51,58 @@ export default function HomeScreen({ navigation }) {
 
         if (talentStr) {
           const parsedTalent = JSON.parse(talentStr);
+          if (!parsedTalent?.talent_id) return;
 
-          if (!parsedTalent?.talent_id) {
-            console.warn("⚠️ Talent data missing or corrupted in session");
+          // 🔄 Re-fetch full talent profile from server
+          const updatedRes = await fetch(`${baseUrl}/talent-profiles/${parsedTalent.talent_id}`);
+          if (!updatedRes.ok) throw new Error('Failed to fetch latest talent profile');
+
+          const updatedTalent = await updatedRes.json();
+          await AsyncStorage.setItem('talent', JSON.stringify(updatedTalent));
+          setTalent(updatedTalent);
+
+          // 🧠 Redirect if missing minimum match info
+          const isMissingMatchEssentials = 
+            !updatedTalent.bio?.trim();
+            // Uncomment below if needed
+            //!Array.isArray(updatedTalent.skills) ||
+            //updatedTalent.skills.length === 0 ||
+            //!updatedTalent.experience_level?.trim();
+
+          if (isMissingMatchEssentials) {
+            navigation.replace('ProfileStep1');
             return;
           }
 
-          const latestMode = parsedTalent.profile_mode || 'active';
-          setTalent(parsedTalent);
-          const isIncompleteProfile = !parsedTalent.bio || !parsedTalent.skills || parsedTalent.skills.length === 0;
-          if (isIncompleteProfile) {
-            Alert.alert("📝 Complete Your Profile", "Please complete your profile before viewing job matches.");
-            navigation.replace('Profile');
-            return;
-          }
-
+          const latestMode = updatedTalent.profile_mode || 'active';
           setMode(latestMode);
 
           if (latestMode === 'passive') {
-            await fetchPassiveMatches(parsedTalent.talent_id);
+            await fetchPassiveMatches(updatedTalent.talent_id);
           } else {
-            await fetchSemanticJobMatches(parsedTalent.talent_id);
+            await fetchSemanticJobMatches(updatedTalent.talent_id);
           }
 
-          await fetchAppliedJobs(parsedTalent.talent_id);
+          await fetchAppliedJobs(updatedTalent.talent_id);
           await fetchApplicantCounts();
         }
-
       } catch (e) {
         console.error('🔥 Failed to refresh HomeScreen on focus:', e);
       } finally {
-        setLoading(false); // ✅ move here
+        setLoading(false);
       }
     };
 
     refreshOnFocus();
   }, [])
-);*/
+);
 
 
   useEffect(() => {
-  if (jobs.length > 0 && currentIndex >= jobs.length) {
-    setCurrentIndex(0);
-  }
-}, [jobs]);
+    if (jobs.length > 0 && currentIndex >= jobs.length) {
+      setCurrentIndex(0);
+    }
+  }, [jobs]);
 
 
 

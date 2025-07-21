@@ -49,23 +49,34 @@ export default function ProfileStep1({ navigation }) {
   }, [locationQuery]);
 
   const handleNext = async () => {
-    if (!firstName || !lastName) {
-      return Alert.alert('Missing Info', 'Please enter your full name.');
-    }
+  if (!firstName || !lastName) {
+    return Alert.alert('Missing Info', 'Please enter your full name.');
+  }
 
-    const full_name = `${firstName} ${lastName}`;
-    const payload = { full_name, birthdate, gender, location };
+  const full_name = `${firstName} ${lastName}`;
+  const payload = { full_name, birthdate, gender, location };
 
-    try {
-      const existingDraft = await AsyncStorage.getItem('onboardingDraft');
-      const draft = existingDraft ? JSON.parse(existingDraft) : {};
-      const updatedDraft = { ...draft, ...payload };
-      await AsyncStorage.setItem('onboardingDraft', JSON.stringify(updatedDraft));
-      navigation.replace('ProfileStep2');
-    } catch (err) {
-      Alert.alert('Error', 'Something went wrong while saving your data.');
-    }
-  };
+  try {
+    const existingDraft = await AsyncStorage.getItem('onboardingDraft');
+    const draft = existingDraft ? JSON.parse(existingDraft) : {};
+
+    const userStr = await AsyncStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : {};
+
+    const updatedDraft = {
+      ...draft,
+      ...payload,
+      talent_id: user.talent_id, // ✅ Ensure talent_id is carried over
+    };
+
+    await AsyncStorage.setItem('onboardingDraft', JSON.stringify(updatedDraft));
+    navigation.replace('ProfileStep2');
+  } catch (err) {
+    console.error('Failed to save onboarding draft:', err);
+    Alert.alert('Error', 'Something went wrong while saving your data.');
+  }
+};
+
 
   return (
     <View style={{ padding: 20 }}>
