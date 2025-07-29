@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, Alert } from 'react-native';
+import { View, Text, TextInput, Button, Alert, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function ProfileStep2({ navigation }) {
@@ -35,27 +35,48 @@ export default function ProfileStep2({ navigation }) {
   };
 
   return (
-    <View style={{ padding: 20 }}>
-      <Text style={{ fontSize: 22, fontWeight: 'bold' }}>Summarize your expertise</Text>
-      <Text style={{ marginBottom: 12 }}>This is your first impression</Text>
+    <View style={{ padding: 24, backgroundColor: '#fff', flex: 1 }}>
+      <Text style={{ fontSize: 22, fontWeight: 'bold', color: '#4A116A', marginBottom: 4 }}>
+        Summarize your expertise
+      </Text>
+      <Text style={{ marginBottom: 20, color: '#555' }}>
+        This is your first impression
+      </Text>
 
       <TextInput
         placeholder="Write your bio..."
+        placeholderTextColor="#999"
         value={bio}
         onChangeText={setBio}
         multiline
         numberOfLines={4}
+        textAlignVertical="top"
         style={{
-          borderWidth: 1,
-          borderColor: '#ccc',
-          borderRadius: 4,
-          padding: 10,
-          height: 100,
-          marginBottom: 12,
+          backgroundColor: '#f7f7f7',
+          borderRadius: 10,
+          padding: 14,
+          fontSize: 16,
+          color: '#000',
+          height: 120,
+          marginBottom: 20,
         }}
       />
 
-      <Button title="Next" onPress={handleNext} />
+      <TouchableOpacity
+        style={{
+          backgroundColor: '#A259FF',
+          paddingVertical: 14,
+          borderRadius: 24,
+          alignItems: 'center',
+        }}
+        onPress={handleNext}
+      >
+        <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>Next</Text>
+      </TouchableOpacity>
+
+      <Text style={{ textAlign: 'center', marginTop: 12, fontSize: 12, color: '#777' }}>
+        You can always edit your profile later
+      </Text>
     </View>
   );
 }

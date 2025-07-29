@@ -1,6 +1,6 @@
 // screens/profilewizard/ProfileStep4.js
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, Alert } from 'react-native';
+import { View, Text, TextInput, Button, Alert, StyleSheet, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 
@@ -58,15 +58,16 @@ export default function ProfileStep4({ navigation }) {
   };
 
   return (
-    <View style={{ padding: 20 }}>
-      <Text style={{ fontSize: 22, fontWeight: 'bold' }}>Define your work preferences</Text>
-      <Text style={{ marginBottom: 6 }}>Availability</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Define your work preferences</Text>
+      <Text style={styles.subtitle}>Choose what fits you</Text>
+
       <Picker
         selectedValue={availability}
         onValueChange={setAvailability}
-        style={{ backgroundColor: '#f0f0f0', borderRadius: 8, marginBottom: 12 }}
+        style={styles.picker}
       >
-        <Picker.Item label="Select..." value="" />
+        <Picker.Item label="Availability" value="" />
         <Picker.Item label="Immediate" value="Immediate" />
         <Picker.Item label="Two Weeks Notice" value="Two Weeks Notice" />
         <Picker.Item label="1 Month" value="1 Month" />
@@ -74,50 +75,32 @@ export default function ProfileStep4({ navigation }) {
         <Picker.Item label="Not Available" value="Not Available" />
       </Picker>
 
-      <Text style={{ marginBottom: 6 }}>Work Mode</Text>
       <Picker
         selectedValue={workMode}
         onValueChange={setWorkMode}
-        style={{ backgroundColor: '#f0f0f0', borderRadius: 8, marginBottom: 12 }}
+        style={styles.picker}
       >
-        <Picker.Item label="Select..." value="" />
+        <Picker.Item label="Work mode" value="" />
         <Picker.Item label="Remote" value="Remote" />
         <Picker.Item label="Hybrid" value="Hybrid" />
         <Picker.Item label="On-site" value="On-site" />
       </Picker>
 
-
-      <Text style={{ marginBottom: 6 }}>Desired Salary</Text>
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-        <Text style={{ fontSize: 18, marginRight: 8 }}>
-          {currencySymbols[currency] || ''}
-        </Text>
+      <View style={styles.salaryContainer}>
+        <Text style={styles.currencySymbol}>{currencySymbols[currency]}</Text>
         <TextInput
-          style={{ flex: 1, borderBottomWidth: 1 }}
+          style={styles.salaryInput}
           value={desiredSalary}
           onChangeText={setDesiredSalary}
+          placeholder="Desired salary"
           keyboardType="numeric"
         />
       </View>
 
-      {/*<Text style={{ marginTop: 12, fontWeight: 'bold' }}>Experience Level</Text>*/}
-      <Picker
-        selectedValue={experienceLevel}
-        onValueChange={(val) => setExperienceLevel(val)}
-        style={{ backgroundColor: '#f0f0f0', borderRadius: 8, marginBottom: 12 }}
-      >
-        <Picker.Item label="Select..." value="" />
-        <Picker.Item label="Entry (0 years)" value="Entry" />
-        <Picker.Item label="Junior (1–2 years)" value="Junior" />
-        <Picker.Item label="Intermediate (2–5 years)" value="Intermediate" />
-        <Picker.Item label="Senior (5+ years)" value="Senior" />
-      </Picker>
-
-      <Text style={{ marginBottom: 6 }}>Currency</Text>
       <Picker
         selectedValue={currency}
         onValueChange={setCurrency}
-        style={{ backgroundColor: '#f0f0f0', borderRadius: 8, marginBottom: 12 }}
+        style={styles.picker}
       >
         <Picker.Item label="USD – U.S. Dollar" value="USD" />
         <Picker.Item label="EUR – Euro" value="EUR" />
@@ -127,8 +110,94 @@ export default function ProfileStep4({ navigation }) {
         <Picker.Item label="CAD – Canadian Dollar" value="CAD" />
       </Picker>
 
+      <View style={styles.buttonRow}>
+        <TouchableOpacity
+          style={[styles.button, styles.backButton]}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.backText}>Back</Text>
+        </TouchableOpacity>
 
-      <Button title="Next" onPress={handleNext} />
+        <TouchableOpacity style={styles.button} onPress={handleNext}>
+          <Text style={styles.buttonText}>Next</Text>
+        </TouchableOpacity>
+      </View>
+
+      <Text style={styles.footerNote}>You can always edit your profile later</Text>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 24,
+    backgroundColor: '#fff',
+    flex: 1,
+    justifyContent: 'center'
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#4a0072',
+    marginBottom: 4,
+    textAlign: 'center'
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 24,
+    textAlign: 'center'
+  },
+  picker: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 12,
+    marginBottom: 16
+  },
+  salaryContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    marginBottom: 16
+  },
+  currencySymbol: {
+    fontSize: 18,
+    marginRight: 8
+  },
+  salaryInput: {
+    flex: 1,
+    fontSize: 16,
+    paddingVertical: 8
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 16
+  },
+  button: {
+    backgroundColor: '#9C27B0',
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    borderRadius: 24
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: '600'
+  },
+  backButton: {
+    backgroundColor: '#fff',
+    borderColor: '#9C27B0',
+    borderWidth: 1
+  },
+  backText: {
+    color: '#9C27B0',
+    fontWeight: '600'
+  },
+  footerNote: {
+    textAlign: 'center',
+    fontSize: 12,
+    color: '#888',
+    marginTop: 24
+  }
+});

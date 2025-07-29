@@ -1,6 +1,6 @@
 // screens/profilewizard/ProfileStep5.js
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Switch, Button, Alert } from 'react-native';
+import { View, Text, TextInput, Switch, Button, Alert, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 
@@ -61,65 +61,148 @@ const [desiredSalary, setDesiredSalary] = useState('');
   };
 
   return (
-    <View style={{ padding: 20 }}>
-      <Text style={{ fontSize: 22, fontWeight: 'bold' }}>Refine your match preferences</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Refine your match preferences</Text>
+
       <TextInput
-        placeholder="Dream Company"
+        placeholder="Dream company"
         value={dreamCompany}
         onChangeText={setDreamCompany}
-        style={{ borderBottomWidth: 1, marginBottom: 12 }}
+        style={styles.input}
       />
+
       <TextInput
-        placeholder="Preferred Industry"
+        placeholder="Preferred industry"
         value={preferredIndustry}
         onChangeText={setPreferredIndustry}
-        style={{ borderBottomWidth: 1, marginBottom: 12 }}
+        style={styles.input}
       />
+
       <TextInput
-        placeholder="Match Threshold (e.g. 70)"
+        placeholder="Match threshold (e.g. 70)"
         value={matchThreshold}
         onChangeText={setMatchThreshold}
         keyboardType="numeric"
-        style={{ borderBottomWidth: 1, marginBottom: 12 }}
+        style={styles.input}
       />
 
-      <Text style={{ marginBottom: 6 }}>Desired Salary</Text>
-<View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-  <Text style={{ fontSize: 18, marginRight: 8 }}>
-    {currencySymbols[desiredCurrency] || ''}
-  </Text>
-  <TextInput
-    placeholder="Amount"
-    value={desiredSalary}
-    onChangeText={setDesiredSalary}
-    keyboardType="numeric"
-    style={{ flex: 1, borderBottomWidth: 1 }}
-  />
-</View>
+      <Text style={styles.label}>Desired salary</Text>
+      <View style={styles.salaryContainer}>
+        <Text style={styles.currencySymbol}>{currencySymbols[desiredCurrency] || ''}</Text>
+        <TextInput
+          placeholder="Amount"
+          value={desiredSalary}
+          onChangeText={setDesiredSalary}
+          keyboardType="numeric"
+          style={styles.salaryInput}
+        />
+      </View>
 
-<Text style={{ marginBottom: 6 }}>Currency</Text>
-<Picker
-  selectedValue={desiredCurrency}
-  onValueChange={(val) => setDesiredCurrency(val)}
-  style={{ backgroundColor: '#f0f0f0', borderRadius: 8, marginBottom: 12 }}
->
-  <Picker.Item label="USD – U.S. Dollar" value="USD" />
-  <Picker.Item label="EUR – Euro" value="EUR" />
-  <Picker.Item label="ILS – Israeli Shekel" value="ILS" />
-  <Picker.Item label="GBP – British Pound" value="GBP" />
-  <Picker.Item label="AUD – Australian Dollar" value="AUD" />
-  <Picker.Item label="CAD – Canadian Dollar" value="CAD" />
-</Picker>
+      <Text style={styles.label}>Currency</Text>
+      <Picker
+        selectedValue={desiredCurrency}
+        onValueChange={setDesiredCurrency}
+        style={styles.picker}
+      >
+        <Picker.Item label="USD – U.S. Dollar" value="USD" />
+        <Picker.Item label="EUR – Euro" value="EUR" />
+        <Picker.Item label="ILS – Israeli Shekel" value="ILS" />
+        <Picker.Item label="GBP – British Pound" value="GBP" />
+        <Picker.Item label="AUD – Australian Dollar" value="AUD" />
+        <Picker.Item label="CAD – Canadian Dollar" value="CAD" />
+      </Picker>
 
-
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-        <Text style={{ flex: 1 }}>Passive Mode</Text>
+      <View style={styles.switchRow}>
+        <Text style={styles.switchLabel}>Passive mode</Text>
         <Switch
           value={passiveMode}
           onValueChange={setPassiveMode}
+          thumbColor={passiveMode ? '#9C27B0' : '#f4f3f4'}
+          trackColor={{ false: '#ccc', true: '#e1bee7' }}
         />
       </View>
-      <Button title="Next" onPress={handleNext} />
+
+      <TouchableOpacity style={styles.button} onPress={handleNext}>
+        <Text style={styles.buttonText}>Next</Text>
+      </TouchableOpacity>
+
+      <Text style={styles.footerNote}>You can always edit your profile later</Text>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 24,
+    backgroundColor: '#fff',
+    flex: 1,
+    justifyContent: 'center'
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#4a0072',
+    marginBottom: 24,
+    textAlign: 'center'
+  },
+  input: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 16,
+    fontSize: 16
+  },
+  label: {
+    marginBottom: 6,
+    fontWeight: '500'
+  },
+  salaryContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    marginBottom: 16
+  },
+  currencySymbol: {
+    fontSize: 18,
+    marginRight: 8
+  },
+  salaryInput: {
+    flex: 1,
+    fontSize: 16,
+    paddingVertical: 8
+  },
+  picker: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 12,
+    marginBottom: 16
+  },
+  switchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24
+  },
+  switchLabel: {
+    flex: 1,
+    fontSize: 16
+  },
+  button: {
+    backgroundColor: '#9C27B0',
+    paddingVertical: 12,
+    borderRadius: 24,
+    alignItems: 'center'
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 16
+  },
+  footerNote: {
+    textAlign: 'center',
+    fontSize: 12,
+    color: '#888',
+    marginTop: 24
+  }
+});

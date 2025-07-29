@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button, ScrollView } from 'react-native';
+import { View, Text, Button, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EXPO_PUBLIC_SCOUTJAR_SERVER_BASE_URL } from '@env';
 
@@ -80,32 +80,56 @@ export default function ProfileStep7({ navigation }) {
   };
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 20 }}>
-     {/*} <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 16 }}>
-        🚦 Step 7 Debug & Final Submit
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.title}>You're all set!</Text>
+      <Text style={styles.subtitle}>
+        Your profile is complete. Tap Submit to start looking for work.
       </Text>
 
-      <Text style={{ fontSize: 16, fontWeight: '600' }}>📦 onboardingDraft:</Text>
-      <Text selectable style={{ fontFamily: 'monospace', marginBottom: 20 }}>
-        {JSON.stringify(draft, null, 2)}
-      </Text>
+      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+        <Text style={styles.buttonText}>Submit and Save Profile</Text>
+      </TouchableOpacity>
 
-      <Text style={{ fontSize: 16, fontWeight: '600' }}>👤 talent:</Text>
-      <Text selectable style={{ fontFamily: 'monospace', marginBottom: 20 }}>
-        {JSON.stringify(talent, null, 2)}
-      </Text>
-
-      <Text style={{ fontSize: 16, fontWeight: '600' }}>👤 user:</Text>
-      <Text selectable style={{ fontFamily: 'monospace', marginBottom: 20 }}>
-        {JSON.stringify(user, null, 2)}
-      </Text>
-
-      <Text style={{ fontSize: 16, fontWeight: '600' }}>📤 Final Payload to Submit:</Text>
-      <Text selectable style={{ fontFamily: 'monospace', marginBottom: 20 }}>
-        {JSON.stringify(payload, null, 2)}
-      </Text>*/}
-      <Text style={{ fontSize: 16, fontWeight: '600' }}>Your Profile is complete.  Tap on Submit to start looking work.</Text>
-      <Button title="Submit and Save Profile" onPress={handleSubmit} />
+      <Text style={styles.footerNote}>You can always edit your profile later</Text>
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 24,
+    backgroundColor: '#fff',
+    flexGrow: 1,
+    justifyContent: 'center'
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#4a0072',
+    textAlign: 'center',
+    marginBottom: 8
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 24
+  },
+  button: {
+    backgroundColor: '#9C27B0',
+    paddingVertical: 12,
+    borderRadius: 24,
+    alignItems: 'center'
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 16
+  },
+  footerNote: {
+    textAlign: 'center',
+    fontSize: 12,
+    color: '#888',
+    marginTop: 32
+  }
+});
